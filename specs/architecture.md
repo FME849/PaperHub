@@ -1,5 +1,7 @@
 # Architecture
 
+## Big Components
+
 Frontend:
 - Next.js
 
@@ -20,3 +22,19 @@ External APIs:
 
 Email module:
 - Supabase
+
+---
+
+## Project structure
+
+PaperHub/
+├── specs/
+│   ├── product.md
+│   ├── requirements.md
+│   ├── architecture.md
+│   └── tasks.md
+│
+├── frontend/
+├── backend/
+├── docs/
+└── README.md

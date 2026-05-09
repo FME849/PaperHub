@@ -1,8 +1,8 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
+**Feature Branch**: `[###-feature-name]`
+**Created**: [DATE]
+**Status**: Draft
 **Input**: User description: "$ARGUMENTS"
 
 ## User Scenarios & Testing *(mandatory)*
@@ -11,7 +11,7 @@
   IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
   Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
   you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
+
   Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
   Think of each story as a standalone slice of functionality that can be:
   - Developed independently
@@ -85,7 +85,7 @@
 ### Functional Requirements
 
 - **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
+- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
@@ -94,6 +94,28 @@
 
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+
+### Constitution Alignment *(mandatory)*
+
+- **CA-001**: Feature MUST use the fixed Paper Hub stack: Next.js App Router,
+  TypeScript, Tailwind CSS, NestJS, PostgreSQL with TypeORM, JWT, Anthropic
+  Claude `claude-sonnet-4-20250514`, arXiv API only, and `@nestjs/schedule`
+  where background work is needed.
+- **CA-002**: Feature MUST fit the approved MVP delivery order or include
+  explicit approval for out-of-order work.
+- **CA-003**: Feature MUST avoid prohibited additions: queues, Redis, Celery,
+  GraphQL, WebSockets, Docker, CI/CD, PDF storage, third-party UI component
+  libraries, additional paper sources, and advanced features before MVP
+  completion.
+- **CA-004**: Backend requirements MUST include DTO validation, service-layer
+  database handling, Swagger decorators, meaningful HTTP status codes, and no
+  raw error exposure where API changes are involved.
+- **CA-005**: Frontend requirements MUST include loading states, error states,
+  network-error toasts, 401 login redirect behavior, and consistent page-level
+  UI language where UI changes are involved.
+- **CA-006**: External integration requirements MUST include arXiv retry/skip
+  behavior and Anthropic non-blocking failure behavior where those integrations
+  are involved.
 
 ### Key Entities *(include if feature involves data)*
 

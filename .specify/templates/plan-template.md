@@ -17,21 +17,42 @@
   the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript for Next.js App Router frontend and NestJS backend
+**Primary Dependencies**: Next.js, Tailwind CSS, NestJS, TypeORM, PostgreSQL, JWT, Anthropic Claude API, arXiv API, `@nestjs/schedule`
+**Storage**: PostgreSQL with TypeORM entities and migrations
+**Testing**: [Specify unit/integration/manual validation approach for this feature]
+**Target Platform**: Web application
+**Project Type**: Web app with separate frontend and backend
+**Performance Goals**: Optimize only for measured problems or explicit user-facing requirements
+**Constraints**: Fixed MVP stack; REST only; arXiv only; no queue, GraphQL, WebSockets, Docker, CI/CD, PDF storage, or third-party UI component library unless explicitly requested
+**Scale/Scope**: MVP paper tracking and summarization by topic
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- Fixed Stack: Does the plan use Next.js App Router, TypeScript, Tailwind CSS,
+  NestJS, PostgreSQL/TypeORM, JWT, Anthropic Claude
+  `claude-sonnet-4-20250514`, arXiv only, and `@nestjs/schedule`?
+- MVP Order: Is this feature the next allowed MVP feature, or is there explicit
+  approval to work outside the nine-feature MVP sequence?
+- Simplicity: Is the design the boring, obvious solution with no queue,
+  GraphQL, WebSockets, Docker, CI/CD, PDF storage, advanced feature, or
+  third-party UI component library?
+- Backend Quality: Are controllers HTTP-only, services business-logic-only,
+  DTO validation present, response transformation planned, Swagger decorators
+  included, and database access isolated from controllers?
+- Frontend Quality: Are Server Components the default, client components
+  justified, TanStack Query used for server state, React Hook Form used for
+  forms, Tailwind used for styling, and one UI language chosen per page?
+- Resilience: Are arXiv retry/skip rules, Anthropic non-blocking failure rules,
+  database error handling, frontend loading/error states, and auth redirects
+  covered where applicable?
+- Security: Are secrets environment-only, `.env.example` maintained, JWT secret
+  length enforced, backend validation included, and auth rate limits planned?
+- Data/API/Scheduler: Are snake_case database conventions, indexed foreign keys,
+  soft deletes, `/api/v1/` REST conventions, pagination shape, scheduler timing,
+  logging, and non-overlap locking covered where applicable?
 
 ## Project Structure
 
@@ -68,27 +89,19 @@ tests/
 ├── integration/
 └── unit/
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
 backend/
 ├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
+│   ├── modules/
+│   ├── common/
+│   └── main.ts
 └── tests/
 
 frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
+├── app/
+├── components/
+├── lib/
+├── hooks/
 └── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
 **Structure Decision**: [Document the selected structure and reference the real
