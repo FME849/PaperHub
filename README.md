@@ -1,20 +1,52 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# PaperHub — Frontend
 
-# Run and deploy your AI Studio app
+Giao diện web cho PaperHub: duyệt bài báo, chủ đề, yêu thích, thống kê và đăng nhập (mock). Xây dựng bằng **Next.js** (Pages Router), **React**, **TypeScript** và **Tailwind CSS**.
 
-This contains everything you need to run your app locally.
+## Yêu cầu
 
-View your app in AI Studio: https://ai.studio/apps/f2a2bece-1f99-430d-a735-92e0d82970a7
+- **Node.js** LTS (khuyến nghị 18.x trở lên)
+- **npm** (đi kèm Node)
 
-## Run Locally
+## Chạy trên máy
 
-**Prerequisites:**  Node.js
+```bash
+npm install
+npm run dev
+```
 
+Mở trình duyệt tại **http://localhost:3000** (cổng mặc định trong `package.json`).
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Dữ liệu hiện dùng **mock** trong code; không cần cấu hình API để xem giao diện.
+
+## Scripts
+
+| Lệnh            | Mô tả                          |
+|-----------------|--------------------------------|
+| `npm run dev`   | Chế độ phát triển (hot reload) |
+| `npm run build` | Build production               |
+| `npm run start` | Chạy bản build (`next start`)  |
+| `npm run lint`  | Kiểm tra TypeScript (`tsc`)    |
+
+Thư mục `.next` được tạo khi chạy `dev` / `build`; không commit (đã có trong `.gitignore`).
+
+## Cấu trúc thư mục (tóm tắt)
+
+- `src/pages/` — các route Next.js (`index`, `topics`, `statistics`, `auth/…`, v.v.)
+- `src/screens/` — màn hình / logic UI tương ứng
+- `src/components/` — layout, paper card, …
+- `components/ui/` — component UI (shadcn-style)
+
+## Biến môi trường (tùy chọn)
+
+File [`.env.example`](.env.example) chứa placeholder cho tích hợp sau này (ví dụ Gemini). **Hiện tại app không đọc các biến này** để chạy UI. Nếu sau này thêm tính năng AI hoặc backend, có thể tạo `.env.local` (không commit) và điền giá trị thật.
+
+## Build production
+
+```bash
+npm run build
+npm run start
+```
+
+---
+
+Phần repo nhóm: [PaperHub](https://github.com/FME849/PaperHub).
