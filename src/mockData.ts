@@ -1,0 +1,84 @@
+import { Paper, Topic, Notification } from './types';
+
+export const MOCK_TOPICS: Topic[] = [
+  { id: '1', name: 'AI Safety', count: 12 },
+  { id: '2', name: 'Large Language Models', count: 45 },
+  { id: '3', name: 'Reinforcement Learning', count: 8 },
+  { id: '4', name: 'Computer Vision', count: 23 },
+  { id: '5', name: 'Bioinformatics', count: 5 },
+];
+
+export const MOCK_PAPERS: Paper[] = [
+  {
+    id: 'p1',
+    title: 'Attention Is All You Need',
+    authors: ['Ashish Vaswani', 'Noam Shazeer', 'Niki Parmar'],
+    publishDate: '2017-06-12',
+    sourceUrl: 'https://arxiv.org/abs/1706.03762',
+    abstract: 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks...',
+    summary: 'Proposes the Transformer architecture, replacing RNNs with self-attention mechanisms for superior parallelization and performance in translation.',
+    topics: ['Large Language Models'],
+    isBookmarked: true,
+    readabilityScore: 85,
+    impactFactor: 9.8,
+  },
+  {
+    id: 'p2',
+    title: 'Language Models are Few-Shot Learners',
+    authors: ['Tom B. Brown', 'Benjamin Mann', 'Nick Ryder'],
+    publishDate: '2020-05-28',
+    sourceUrl: 'https://arxiv.org/abs/2005.14165',
+    abstract: 'Recent work has demonstrated substantial gains on many NLP tasks and benchmarks by pre-training on a large corpus of text...',
+    summary: 'Introduces GPT-3, demonstrating that massive language models can perform diverse tasks with zero-shot or few-shot learning without fine-tuning.',
+    topics: ['Large Language Models', 'AI Safety'],
+    isBookmarked: false,
+    readabilityScore: 78,
+    impactFactor: 9.5,
+    isSimilar: true,
+  },
+  {
+    id: 'p3',
+    title: 'Mastering the Game of Go with Deep Neural Networks and Tree Search',
+    authors: ['David Silver', 'Aja Huang', 'Chris J. Maddison'],
+    publishDate: '2016-01-28',
+    sourceUrl: 'https://www.nature.com/articles/nature16961',
+    abstract: 'The game of Go has long been viewed as the most challenging of classic games for artificial intelligence...',
+    summary: 'Describes AlphaGo, a system that combined deep neural networks and Monte Carlo tree search to defeat a world champion Go player.',
+    topics: ['Reinforcement Learning'],
+    isBookmarked: true,
+    readabilityScore: 92,
+    impactFactor: 8.9,
+  },
+  {
+    id: 'p4',
+    title: 'Segment Anything',
+    authors: ['Alexander Kirillov', 'Eric Mintun', 'Nikhila Ravi'],
+    publishDate: '2023-04-05',
+    sourceUrl: 'https://arxiv.org/abs/2304.02643',
+    abstract: 'We introduce the Segment Anything (SA) project: a new task, model, and dataset for image segmentation.',
+    summary: 'Presents the SAM model, a foundation model for image segmentation that generalizes to new tasks without prior training.',
+    topics: ['Computer Vision'],
+    isBookmarked: false,
+    readabilityScore: 72,
+    impactFactor: 8.4,
+  },
+];
+
+export const MOCK_NOTIFICATIONS: Notification[] = [
+  {
+    id: 'n1',
+    title: 'New Paper in AI Safety',
+    message: 'A new paper "Constitutional AI" has been published.',
+    date: '2 hours ago',
+    isRead: false,
+    type: 'new_paper',
+  },
+  {
+    id: 'n2',
+    title: 'Similar Content Detected',
+    message: 'Paper "GPT-4 Technical Report" is highly similar to GPT-3.',
+    date: '1 day ago',
+    isRead: true,
+    type: 'similar_content',
+  },
+];
