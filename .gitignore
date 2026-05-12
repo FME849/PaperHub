@@ -1,9 +1,60 @@
+# Node / Next.js
 node_modules/
 .next/
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# Build / dist (shared)
 build/
 dist/
-coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 .DS_Store
+*.tmp
+
+# Logs & env
 *.log
 .env*
 !.env.example
+.env.local
+
+# Project specific (from main)
+.genreleases/
+*.zip
+sdd-*/
+docs/dev
+
+# Extension system
+.specify/extensions/.cache/
+.specify/extensions/.backup/
+.specify/extensions/*/local-config.yml
+
+# Note: omitted Python template entries `lib/` and `lib64/` so Next.js `lib/` is not ignored.
+# Note: omitted `*.lock` so package-lock.json / yarn.lock stay tracked.
