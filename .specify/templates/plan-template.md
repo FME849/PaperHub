@@ -17,42 +17,41 @@
   the iteration process.
 -->
 
-**Language/Version**: TypeScript for Next.js App Router frontend and NestJS backend
-**Primary Dependencies**: Next.js, Tailwind CSS, NestJS, TypeORM, PostgreSQL, JWT, Anthropic Claude API, arXiv API, `@nestjs/schedule`
-**Storage**: PostgreSQL with TypeORM entities and migrations
+**Language/Version**: TypeScript for Next.js frontend and Express.js backend
+**Primary Dependencies**: Next.js, Express.js, Prisma, MySQL, OpenAI API, arXiv API
+**Storage**: MySQL with Prisma models and migrations
 **Testing**: [Specify unit/integration/manual validation approach for this feature]
 **Target Platform**: Web application
 **Project Type**: Web app with separate frontend and backend
 **Performance Goals**: Optimize only for measured problems or explicit user-facing requirements
-**Constraints**: Fixed MVP stack; REST only; arXiv only; no queue, GraphQL, WebSockets, Docker, CI/CD, PDF storage, or third-party UI component library unless explicitly requested
+**Constraints**: Fixed product stack; REST only; backend-owned AI interactions; backend-owned scheduled fetching jobs; arXiv as the external paper source
 **Scale/Scope**: MVP paper tracking and summarization by topic
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- Fixed Stack: Does the plan use Next.js App Router, TypeScript, Tailwind CSS,
-  NestJS, PostgreSQL/TypeORM, JWT, Anthropic Claude
-  `claude-sonnet-4-20250514`, arXiv only, and `@nestjs/schedule`?
+- Fixed Stack: Does the plan use Next.js and TypeScript for the frontend,
+  Express.js and TypeScript for the backend, REST APIs, MySQL, Prisma,
+  OpenAI API, and arXiv API?
 - MVP Order: Is this feature the next allowed MVP feature, or is there explicit
   approval to work outside the nine-feature MVP sequence?
-- Simplicity: Is the design the boring, obvious solution with no queue,
-  GraphQL, WebSockets, Docker, CI/CD, PDF storage, advanced feature, or
-  third-party UI component library?
-- Backend Quality: Are controllers HTTP-only, services business-logic-only,
-  DTO validation present, response transformation planned, Swagger decorators
-  included, and database access isolated from controllers?
-- Frontend Quality: Are Server Components the default, client components
-  justified, TanStack Query used for server state, React Hook Form used for
-  forms, Tailwind used for styling, and one UI language chosen per page?
-- Resilience: Are arXiv retry/skip rules, Anthropic non-blocking failure rules,
-  database error handling, frontend loading/error states, and auth redirects
-  covered where applicable?
-- Security: Are secrets environment-only, `.env.example` maintained, JWT secret
-  length enforced, backend validation included, and auth rate limits planned?
-- Data/API/Scheduler: Are snake_case database conventions, indexed foreign keys,
-  soft deletes, `/api/v1/` REST conventions, pagination shape, scheduler timing,
-  logging, and non-overlap locking covered where applicable?
+- Folder Rules: Does the plan keep UI in `/frontend`, API/service/repository
+  code in `/backend`, Spec Kit artifacts in `/specs`, and reports in `/docs`?
+- Backend Layering: Are controllers limited to request/response concerns,
+  services responsible for business logic, repositories responsible for Prisma
+  database access, and external APIs isolated behind services?
+- Async and TypeScript: Is strict TypeScript preserved and are asynchronous
+  flows expressed with `async`/`await`?
+- Frontend Quality: Do backend-calling screens include loading states, error
+  states, and appropriate authentication handling?
+- External Services: Are arXiv and OpenAI calls handled only by backend
+  services with user-safe failure behavior?
+- Configuration: Are environment variables centralized, secrets environment-only,
+  and `.env.example` updates planned when configuration changes?
+- Data/API/Scheduler: Are REST resource names, meaningful HTTP status codes,
+  MySQL migrations, Prisma models, repository database access, and backend
+  scheduled jobs covered where applicable?
 
 ## Project Structure
 
@@ -77,31 +76,30 @@ specs/[###-feature]/
 -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
 backend/
 ├── src/
-│   ├── modules/
-│   ├── common/
-│   └── main.ts
+│   ├── controllers/
+│   ├── services/
+│   ├── repositories/
+│   ├── external/
+│   ├── jobs/
+│   ├── config/
+│   └── server.ts
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
 └── tests/
 
 frontend/
-├── app/
-├── components/
-├── lib/
-├── hooks/
+├── src/
+│   ├── pages/ or app/
+│   ├── components/
+│   ├── screens/
+│   ├── lib/
+│   └── hooks/
 └── tests/
+
+docs/
 ```
 
 **Structure Decision**: [Document the selected structure and reference the real

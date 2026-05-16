@@ -97,25 +97,19 @@
 
 ### Constitution Alignment *(mandatory)*
 
-- **CA-001**: Feature MUST use the fixed Paper Hub stack: Next.js App Router,
-  TypeScript, Tailwind CSS, NestJS, PostgreSQL with TypeORM, JWT, Anthropic
-  Claude `claude-sonnet-4-20250514`, arXiv API only, and `@nestjs/schedule`
-  where background work is needed.
+- **CA-001**: Feature MUST use the fixed Paper Hub stack: Next.js, TypeScript,
+  Express.js, REST APIs, MySQL, Prisma, OpenAI API, and arXiv API.
 - **CA-002**: Feature MUST fit the approved MVP delivery order or include
   explicit approval for out-of-order work.
-- **CA-003**: Feature MUST avoid prohibited additions: queues, Redis, Celery,
-  GraphQL, WebSockets, Docker, CI/CD, PDF storage, third-party UI component
-  libraries, additional paper sources, and advanced features before MVP
-  completion.
-- **CA-004**: Backend requirements MUST include DTO validation, service-layer
-  database handling, Swagger decorators, meaningful HTTP status codes, and no
-  raw error exposure where API changes are involved.
+- **CA-003**: Feature MUST preserve repository folder separation across
+  `/frontend`, `/backend`, `/specs`, and `/docs`.
+- **CA-004**: Backend requirements MUST keep controllers limited to request and
+  response handling, services responsible for business logic, repositories
+  responsible for Prisma database access, and external APIs isolated in services.
 - **CA-005**: Frontend requirements MUST include loading states, error states,
-  network-error toasts, 401 login redirect behavior, and consistent page-level
-  UI language where UI changes are involved.
-- **CA-006**: External integration requirements MUST include arXiv retry/skip
-  behavior and Anthropic non-blocking failure behavior where those integrations
-  are involved.
+  and appropriate unauthorized-response handling where UI changes are involved.
+- **CA-006**: External integration requirements MUST keep arXiv and OpenAI
+  interactions in backend services and avoid exposing raw provider errors.
 
 ### Key Entities *(include if feature involves data)*
 

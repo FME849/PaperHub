@@ -38,7 +38,7 @@ Thư mục `.next` được tạo khi chạy `dev` / `build`; không commit (đ�
 
 ## Biến môi trường (tùy chọn)
 
-File [`.env.example`](.env.example) chứa placeholder cho tích hợp sau này (ví dụ Gemini). **Hiện tại app không đọc các biến này** để chạy UI. Nếu sau này thêm tính năng AI hoặc backend, có thể tạo `.env.local` (không commit) và điền giá trị thật.
+File [`.env.example`](.env.example) chứa placeholder cho tích hợp sau này (ví dụ OpenAI). **Hiện tại app không đọc các biến này** để chạy UI. Nếu sau này thêm tính năng AI hoặc backend, có thể tạo `.env.local` (không commit) và điền giá trị thật.
 
 ## Build production
 

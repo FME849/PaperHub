@@ -22,11 +22,14 @@ reason MUST be stated in the generated tasks.
 
 ## Path Conventions
 
-- **Backend**: `backend/src/` for NestJS modules, controllers, services,
-  repositories, DTOs, entities, and scheduler jobs; `backend/tests/` for tests
-- **Frontend**: `frontend/app/` for Next.js App Router routes,
-  `frontend/components/` for components, `frontend/lib/` for API clients and
-  utilities, `frontend/hooks/` for React hooks, and `frontend/tests/` for tests
+- **Backend**: `backend/src/` for Express controllers, services, repositories,
+  external API services, scheduled jobs, and centralized config;
+  `backend/prisma/` for Prisma schema and MySQL migrations; `backend/tests/`
+  for tests
+- **Frontend**: `frontend/src/pages/` or `frontend/app/` for Next.js routes,
+  `frontend/src/components/` for components, `frontend/src/lib/` for API
+  clients and utilities, `frontend/src/hooks/` for React hooks, and
+  `frontend/tests/` for tests
 - Paths in generated tasks MUST match the structure selected in plan.md
 
 <!--
@@ -53,7 +56,7 @@ reason MUST be stated in the generated tasks.
 **Purpose**: Project initialization and basic structure
 
 - [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize TypeScript project dependencies for Next.js frontend and NestJS backend as required
+- [ ] T002 Initialize TypeScript project dependencies for Next.js frontend and Express.js backend as required
 - [ ] T003 [P] Configure linting and formatting tools
 
 ---
@@ -66,13 +69,13 @@ reason MUST be stated in the generated tasks.
 
 Examples of foundational tasks (adjust based on your project):
 
-- [ ] T004 Setup database schema and migrations framework
-- [ ] T005 [P] Implement JWT authentication foundation with 15-minute access tokens and 7-day refresh tokens
-- [ ] T006 [P] Setup REST API routing under `/api/v1/` and Swagger configuration
-- [ ] T007 Create base TypeORM entities with UUID ids, `created_at`, and `updated_at`
-- [ ] T008 Configure service-layer error handling and scheduler logging infrastructure
-- [ ] T009 Setup environment configuration management and `.env.example`
-- [ ] T010 Configure auth rate limiting for login and registration endpoints
+- [ ] T004 Setup MySQL schema and Prisma migrations framework
+- [ ] T005 [P] Implement authentication foundation required by the feature
+- [ ] T006 [P] Setup Express REST API routing and shared response/error handling
+- [ ] T007 Create base Prisma models and repository conventions
+- [ ] T008 Configure service-layer error handling and scheduled-job logging infrastructure
+- [ ] T009 Setup centralized environment configuration management and `.env.example`
+- [ ] T010 Configure request validation and abuse protection for sensitive endpoints
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -93,12 +96,12 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Implementation for User Story 1
 
-- [ ] T013 [P] [US1] Create [Entity1] TypeORM entity or frontend model in [path]
-- [ ] T014 [P] [US1] Create DTOs, response shapes, or form schema in [path]
+- [ ] T013 [P] [US1] Create [Entity1] Prisma model, repository type, or frontend model in [path]
+- [ ] T014 [P] [US1] Create request validation, response shapes, or form schema in [path]
 - [ ] T015 [US1] Implement [Service] in [path] (depends on T013, T014)
 - [ ] T016 [US1] Implement [endpoint/feature] in [path]
 - [ ] T017 [US1] Add validation, error handling, loading states, and error states
-- [ ] T018 [US1] Add Swagger decorators, logging, and auth behavior where applicable
+- [ ] T018 [US1] Add logging, centralized config usage, and auth behavior where applicable
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -112,14 +115,14 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T019 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T020 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T019 [P] [US2] Contract test for [endpoint] in backend/tests/contract/[name].test.ts
+- [ ] T020 [P] [US2] Integration test for [user journey] in backend/tests/integration/[name].test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T021 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T022 [US2] Implement [Service] in src/services/[service].py
-- [ ] T023 [US2] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T021 [P] [US2] Create [Entity] Prisma model, repository type, or frontend model in [path]
+- [ ] T022 [US2] Implement [Service] in backend/src/services/[service].ts
+- [ ] T023 [US2] Implement [endpoint/feature] in backend/src/controllers/[controller].ts or frontend route path
 - [ ] T024 [US2] Integrate with User Story 1 components (if needed)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
@@ -134,14 +137,14 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T025 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T026 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T025 [P] [US3] Contract test for [endpoint] in backend/tests/contract/[name].test.ts
+- [ ] T026 [P] [US3] Integration test for [user journey] in backend/tests/integration/[name].test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T027 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T028 [US3] Implement [Service] in src/services/[service].py
-- [ ] T029 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T027 [P] [US3] Create [Entity] Prisma model, repository type, or frontend model in [path]
+- [ ] T028 [US3] Implement [Service] in backend/src/services/[service].ts
+- [ ] T029 [US3] Implement [endpoint/feature] in backend/src/controllers/[controller].ts or frontend route path
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -205,12 +208,12 @@ Examples of foundational tasks (adjust based on your project):
 
 ```bash
 # Launch all tests for User Story 1 together (if tests requested):
-Task: "Contract test for [endpoint] in tests/contract/test_[name].py"
-Task: "Integration test for [user journey] in tests/integration/test_[name].py"
+Task: "Contract test for [endpoint] in backend/tests/contract/[name].test.ts"
+Task: "Integration test for [user journey] in backend/tests/integration/[name].test.ts"
 
 # Launch all models for User Story 1 together:
-Task: "Create [Entity1] model in src/models/[entity1].py"
-Task: "Create [Entity2] model in src/models/[entity2].py"
+Task: "Create [Entity1] Prisma model or repository type in backend/prisma/schema.prisma or backend/src/repositories/[entity1].ts"
+Task: "Create [Entity2] Prisma model or repository type in backend/prisma/schema.prisma or backend/src/repositories/[entity2].ts"
 ```
 
 ---
