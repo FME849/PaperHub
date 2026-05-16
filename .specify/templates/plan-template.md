@@ -17,41 +17,21 @@
   the iteration process.
 -->
 
-**Language/Version**: TypeScript for Next.js frontend and Express.js backend
-**Primary Dependencies**: Next.js, Express.js, Prisma, MySQL, OpenAI API, arXiv API
-**Storage**: MySQL with Prisma models and migrations
-**Testing**: [Specify unit/integration/manual validation approach for this feature]
-**Target Platform**: Web application
-**Project Type**: Web app with separate frontend and backend
-**Performance Goals**: Optimize only for measured problems or explicit user-facing requirements
-**Constraints**: Fixed product stack; REST only; backend-owned AI interactions; backend-owned scheduled fetching jobs; arXiv as the external paper source
-**Scale/Scope**: MVP paper tracking and summarization by topic
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- Fixed Stack: Does the plan use Next.js and TypeScript for the frontend,
-  Express.js and TypeScript for the backend, REST APIs, MySQL, Prisma,
-  OpenAI API, and arXiv API?
-- MVP Order: Is this feature the next allowed MVP feature, or is there explicit
-  approval to work outside the nine-feature MVP sequence?
-- Folder Rules: Does the plan keep UI in `/frontend`, API/service/repository
-  code in `/backend`, Spec Kit artifacts in `/specs`, and reports in `/docs`?
-- Backend Layering: Are controllers limited to request/response concerns,
-  services responsible for business logic, repositories responsible for Prisma
-  database access, and external APIs isolated behind services?
-- Async and TypeScript: Is strict TypeScript preserved and are asynchronous
-  flows expressed with `async`/`await`?
-- Frontend Quality: Do backend-calling screens include loading states, error
-  states, and appropriate authentication handling?
-- External Services: Are arXiv and OpenAI calls handled only by backend
-  services with user-safe failure behavior?
-- Configuration: Are environment variables centralized, secrets environment-only,
-  and `.env.example` updates planned when configuration changes?
-- Data/API/Scheduler: Are REST resource names, meaningful HTTP status codes,
-  MySQL migrations, Prisma models, repository database access, and backend
-  scheduled jobs covered where applicable?
+[Gates determined based on constitution file]
 
 ## Project Structure
 
@@ -76,30 +56,39 @@ specs/[###-feature]/
 -->
 
 ```text
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+src/
+├── models/
+├── services/
+├── cli/
+└── lib/
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
 backend/
 ├── src/
-│   ├── controllers/
+│   ├── models/
 │   ├── services/
-│   ├── repositories/
-│   ├── external/
-│   ├── jobs/
-│   ├── config/
-│   └── server.ts
-├── prisma/
-│   ├── schema.prisma
-│   └── migrations/
+│   └── api/
 └── tests/
 
 frontend/
 ├── src/
-│   ├── pages/ or app/
 │   ├── components/
-│   ├── screens/
-│   ├── lib/
-│   └── hooks/
+│   ├── pages/
+│   └── services/
 └── tests/
 
-docs/
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
 **Structure Decision**: [Document the selected structure and reference the real

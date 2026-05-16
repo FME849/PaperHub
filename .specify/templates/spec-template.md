@@ -1,8 +1,8 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`
-**Created**: [DATE]
-**Status**: Draft
+**Feature Branch**: `[###-feature-name]`  
+**Created**: [DATE]  
+**Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
 ## User Scenarios & Testing *(mandatory)*
@@ -11,7 +11,7 @@
   IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
   Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
   you should still have a viable MVP (Minimum Viable Product) that delivers value.
-
+  
   Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
   Think of each story as a standalone slice of functionality that can be:
   - Developed independently
@@ -85,7 +85,7 @@
 ### Functional Requirements
 
 - **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
+- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
@@ -94,22 +94,6 @@
 
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
-
-### Constitution Alignment *(mandatory)*
-
-- **CA-001**: Feature MUST use the fixed Paper Hub stack: Next.js, TypeScript,
-  Express.js, REST APIs, MySQL, Prisma, OpenAI API, and arXiv API.
-- **CA-002**: Feature MUST fit the approved MVP delivery order or include
-  explicit approval for out-of-order work.
-- **CA-003**: Feature MUST preserve repository folder separation across
-  `/frontend`, `/backend`, `/specs`, and `/docs`.
-- **CA-004**: Backend requirements MUST keep controllers limited to request and
-  response handling, services responsible for business logic, repositories
-  responsible for Prisma database access, and external APIs isolated in services.
-- **CA-005**: Frontend requirements MUST include loading states, error states,
-  and appropriate unauthorized-response handling where UI changes are involved.
-- **CA-006**: External integration requirements MUST keep arXiv and OpenAI
-  interactions in backend services and avoid exposing raw provider errors.
 
 ### Key Entities *(include if feature involves data)*
 
