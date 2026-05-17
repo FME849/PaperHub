@@ -1,50 +1,168 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+Version change: 1.0.0 -> 2.0.0
+Modified principles:
+- I. Fixed MVP Stack -> I. Fixed Product Stack
+- II. Correctness Before Optimization -> II. Layered Backend Architecture
+- III. Strict TypeScript and Readable Code -> III. Strict TypeScript and Async Code
+- IV. Resilient External Integrations -> IV. Isolated External and AI Services
+- V. Secure, Observable REST Workflows -> V. REST, Configuration, and Data Discipline
+Added sections:
+- Repository Folder Rules
+Removed sections:
+- Technology and Architecture Constraints
+- Data, API, and Scheduler Rules
+Templates requiring updates:
+- ✅ .specify/templates/plan-template.md
+- ✅ .specify/templates/spec-template.md
+- ✅ .specify/templates/tasks-template.md
+- ✅ .specify/templates/commands/*.md (directory absent; no update required)
+- ✅ specs/architecture.md
+- ✅ specs/tasks.md
+- ✅ specs/001-user-auth/spec.md
+- ✅ README.md
+- ✅ AGENTS.md (already delegates to current plan; no change required)
+Follow-up TODOs:
+- None
+-->
+
+# Paper Hub Constitution
+
+## Mission and Product Scope
+
+Paper Hub is a web application that helps users track, discover, and summarize
+scientific papers from arXiv. The project MUST prioritize a clear MVP, readable
+TypeScript, service-oriented design, and maintainable separation between the UI,
+API, data access, scheduled jobs, and external integrations.
+
+Paper Hub implementations MUST avoid hidden coupling between frontend and
+backend code. Backend services own business behavior, AI interactions, arXiv
+access, scheduled fetching, and persistence. Frontend code owns the user
+experience and communicates with the backend through REST APIs.
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Fixed Product Stack
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+The frontend MUST use Next.js and TypeScript. The backend MUST use Express.js
+and TypeScript. The API MUST be REST. Persistence MUST use MySQL with Prisma
+and MySQL migrations. AI integration MUST use the OpenAI API. arXiv MUST be
+the external paper source.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+This stack keeps the project small enough to reason about while still matching
+the product needs: a web UI, a typed REST backend, relational persistence,
+scheduled paper fetching, and backend-owned AI summarization.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Layered Backend Architecture
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+Backend code MUST separate controllers, services, repositories, external API
+clients, scheduled jobs, and configuration. Controllers MUST only handle HTTP
+request parsing, response shaping, and status codes. Services MUST contain
+business logic and coordinate repositories or external services. Repositories
+MUST contain database access. External APIs, including arXiv and OpenAI, MUST be
+isolated behind services.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+This layering makes behavior testable, keeps database and network details out
+of controllers, and prevents product rules from being duplicated across routes.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Strict TypeScript and Async Code
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+All frontend and backend TypeScript MUST run in strict mode. New code MUST use
+`async` and `await` for asynchronous control flow. `any` is prohibited.
+`unknown` MAY be used only at input boundaries and MUST be narrowed before use.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Code MUST prefer explicit names, small functions, early returns, and
+service-oriented design. These rules keep the academic MVP readable and reduce
+the risk of hidden runtime behavior.
+
+### IV. Isolated External and AI Services
+
+The backend MUST handle all AI interactions and all scheduled fetching jobs.
+arXiv access MUST be isolated in an external-source service. OpenAI access MUST
+be isolated in an AI service. Scheduled fetching MUST call backend services
+rather than embedding business logic in scheduler code.
+
+External service failures MUST be handled without exposing raw provider errors
+to users. The backend MUST record enough context to diagnose failed arXiv or
+OpenAI operations while allowing unrelated application workflows to continue
+where practical.
+
+### V. REST, Configuration, and Data Discipline
+
+REST endpoints MUST use resource-oriented names and meaningful HTTP status
+codes. Backend input MUST be validated before business logic runs. Raw internal
+errors, database errors, and provider errors MUST NOT be exposed to clients.
+
+All environment variables MUST be centralized in backend configuration. Secrets
+MUST come from environment variables, `.env` files MUST NOT be committed, and
+`.env.example` MUST be maintained when configuration changes. MySQL schema
+changes MUST be represented by migrations. Database access MUST go through
+Prisma from repository code.
+
+## Repository Folder Rules
+
+The repository MUST keep top-level product areas separated:
+
+- `/frontend` contains the Next.js user interface.
+- `/backend` contains the Express.js REST API, services, repositories,
+  scheduled jobs, and external integrations.
+- `/specs` contains Spec Kit product and feature artifacts.
+- `/docs` contains reports and supporting documentation.
+
+Feature plans and generated tasks MUST use these folders unless an explicit
+user-approved exception is documented in the plan.
+
+## Implementation Standards
+
+Backend controllers MUST NOT query the database directly. Services MUST NOT
+embed raw HTTP request or response objects as business inputs. Repositories
+MUST NOT call external network APIs. Scheduled jobs MUST delegate to services
+and MUST be safe to run repeatedly.
+
+Frontend code MUST communicate with the backend through REST APIs. Frontend
+screens that call the backend MUST provide loading and error states. Protected
+or authenticated workflows MUST handle unauthorized responses by returning the
+user to an appropriate authentication flow.
+
+Database tables and fields MUST follow one consistent naming convention per
+migration. Relationship fields and foreign keys MUST be represented in Prisma
+models. Pagination, filtering, and sorting behavior MUST be documented in API
+contracts for list endpoints.
+
+## MVP Delivery Order
+
+The MVP consists of these core features, delivered in order unless the user
+explicitly approves a different sequence:
+
+1. User registration and login.
+2. Add, edit, and delete topics.
+3. Auto-fetch papers from arXiv by topic.
+4. Store paper metadata: title, abstract, authors, published date, and link.
+5. Summarize paper abstracts using the OpenAI API.
+6. Display a list of new papers per topic.
+7. Search and filter papers by keyword or topic.
+8. View paper detail.
+9. Save paper to favorites.
+
+No advanced feature MAY start until the MVP feature it depends on is complete
+and manually validated.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes conflicting project guidance. Feature specs,
+implementation plans, generated tasks, code reviews, and manual validation MUST
+check compliance with the principles and constraints in this document.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+Amendments MUST update this file, include a Sync Impact Report, and propagate
+required changes to Spec Kit templates and runtime guidance. Amendments require
+an explicit user instruction or approval. The version MUST follow semantic
+versioning: MAJOR for incompatible governance or principle redefinitions, MINOR
+for new principles or materially expanded sections, and PATCH for clarifying
+wording that does not change obligations.
+
+Compliance review MUST happen during planning before implementation and again
+before a feature is considered complete. Any violation MUST be documented in
+the implementation plan with the reason, the simpler compliant alternative that
+was considered, and explicit user approval.
+
+**Version**: 2.0.0 | **Ratified**: 2026-05-09 | **Last Amended**: 2026-05-16

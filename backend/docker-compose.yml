@@ -1,0 +1,21 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: paperhub-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: paperhub
+      MYSQL_DATABASE: paperhub
+      MYSQL_USER: paperhub
+      MYSQL_PASSWORD: paperhub
+    ports:
+      - "3306:3306"
+    volumes:
+      - paperhub-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppaperhub"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  paperhub-mysql-data:
