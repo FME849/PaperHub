@@ -49,4 +49,23 @@ npm run start
 
 ---
 
+## Backend (Express + MySQL via Docker)
+
+Feature `001-user-auth` ships a separate backend service under [`backend/`](./backend/). It provides REST endpoints for registration, login, profile, and favorites. MySQL runs as a local Docker container — no cloud DB.
+
+Bring it up:
+
+```bash
+cd backend
+cp .env.example .env             # one-time
+docker compose up -d             # start MySQL on localhost:3306
+npm install                      # one-time
+npx prisma migrate dev           # one-time per machine
+npm run dev                      # API on http://localhost:4000
+```
+
+See [`specs/001-user-auth/quickstart.md`](./specs/001-user-auth/quickstart.md) for the full walkthrough, [`specs/001-user-auth/contracts/`](./specs/001-user-auth/contracts/) for the API contracts, and [`specs/001-user-auth/frontend-integration.md`](./specs/001-user-auth/frontend-integration.md) for the frontend wiring guide.
+
+---
+
 Phần repo nhóm: [PaperHub](https://github.com/FME849/PaperHub).
