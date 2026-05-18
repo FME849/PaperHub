@@ -1,71 +1,42 @@
-# PaperHub — Frontend
+# PaperHub
 
-Giao diện web cho PaperHub: duyệt bài báo, chủ đề, yêu thích, thống kê và đăng nhập (mock). Xây dựng bằng **Next.js** (Pages Router), **React**, **TypeScript** và **Tailwind CSS**.
+Monorepo cho dự án PaperHub — quản lý và khám phá bài báo khoa học.
 
-## Yêu cầu
+## Cấu trúc
 
-- **Node.js** LTS (khuyến nghị 18.x trở lên)
-- **npm** (đi kèm Node)
+| Thư mục | Mô tả |
+|---------|--------|
+| [`Frontend/`](./Frontend/) | Giao diện Next.js (React, TypeScript, Tailwind) |
+| [`backend/`](./backend/) | API Express + Prisma + MySQL |
+| [`specs/`](./specs/) | Đặc tả tính năng (Spec Kit) |
 
-## Chạy trên máy
+## Chạy nhanh
+
+**Frontend** (giao diện, mock data):
 
 ```bash
+cd Frontend
 npm install
 npm run dev
 ```
 
-Mở trình duyệt tại **http://localhost:3000** (cổng mặc định trong `package.json`).
+→ http://localhost:3000
 
-Dữ liệu hiện dùng **mock** trong code; không cần cấu hình API để xem giao diện.
-
-## Scripts
-
-| Lệnh            | Mô tả                          |
-|-----------------|--------------------------------|
-| `npm run dev`   | Chế độ phát triển (hot reload) |
-| `npm run build` | Build production               |
-| `npm run start` | Chạy bản build (`next start`)  |
-| `npm run lint`  | Kiểm tra TypeScript (`tsc`)    |
-
-Thư mục `.next` được tạo khi chạy `dev` / `build`; không commit (đã có trong `.gitignore`).
-
-## Cấu trúc thư mục (tóm tắt)
-
-- `src/pages/` — các route Next.js (`index`, `topics`, `statistics`, `auth/…`, v.v.)
-- `src/screens/` — màn hình / logic UI tương ứng
-- `src/components/` — layout, paper card, …
-- `components/ui/` — component UI (shadcn-style)
-
-## Biến môi trường (tùy chọn)
-
-File [`.env.example`](.env.example) chứa placeholder cho tích hợp sau này (ví dụ OpenAI). **Hiện tại app không đọc các biến này** để chạy UI. Nếu sau này thêm tính năng AI hoặc backend, có thể tạo `.env.local` (không commit) và điền giá trị thật.
-
-## Build production
-
-```bash
-npm run build
-npm run start
-```
-
----
-
-## Backend (Express + MySQL via Docker)
-
-Feature `001-user-auth` ships a separate backend service under [`backend/`](./backend/). It provides REST endpoints for registration, login, profile, and favorites. MySQL runs as a local Docker container — no cloud DB.
-
-Bring it up:
+**Backend** (API, cần Docker cho MySQL):
 
 ```bash
 cd backend
-cp .env.example .env             # one-time
-docker compose up -d             # start MySQL on localhost:3306
-npm install                      # one-time
-npx prisma migrate dev           # one-time per machine
-npm run dev                      # API on http://localhost:4000
+cp .env.example .env
+docker compose up -d
+npm install
+npx prisma migrate dev
+npm run dev
 ```
 
-See [`specs/001-user-auth/quickstart.md`](./specs/001-user-auth/quickstart.md) for the full walkthrough, [`specs/001-user-auth/contracts/`](./specs/001-user-auth/contracts/) for the API contracts, and [`specs/001-user-auth/frontend-integration.md`](./specs/001-user-auth/frontend-integration.md) for the frontend wiring guide.
+→ http://localhost:4000
+
+Chi tiết: [Frontend/README.md](./Frontend/README.md) · [specs/001-user-auth/quickstart.md](./specs/001-user-auth/quickstart.md)
 
 ---
 
-Phần repo nhóm: [PaperHub](https://github.com/FME849/PaperHub).
+Repo nhóm: [FME849/PaperHub](https://github.com/FME849/PaperHub)
