@@ -9,6 +9,7 @@ import { Bookmark, ExternalLink, Sparkles, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { useAppState } from '@/src/state/AppStateContext';
+import { toast } from 'sonner';
 
 interface PaperCardProps {
   paper: Paper;
@@ -44,7 +45,11 @@ export default function PaperCard({ paper }: PaperCardProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => toggleFavorite(paper.id)}
+              onClick={() => {
+                void toggleFavorite(paper.id).catch((err: Error) =>
+                  toast.error(err.message ?? "Could not update favorite."),
+                );
+              }}
               className={paper.isBookmarked ? "text-primary bg-primary/5" : "text-muted-foreground"}
             >
               <Bookmark className="w-4 h-4" fill={paper.isBookmarked ? "currentColor" : "none"} />

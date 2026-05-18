@@ -18,13 +18,9 @@ export default function ForgotPassword() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!requestPasswordReset(email)) {
-      setError("Please enter a valid email address.");
-      setSuccess(false);
-      return;
-    }
-    setError("");
-    setSuccess(true);
+    void requestPasswordReset;
+    setError("Password reset is not supported by the backend in this release.");
+    setSuccess(false);
   };
 
   return (
@@ -35,7 +31,9 @@ export default function ForgotPassword() {
             <Mail className="w-6 h-6" />
           </div>
           <CardTitle className="text-2xl font-serif">Forgot Password</CardTitle>
-          <CardDescription>We will send a reset link to your email (mock flow).</CardDescription>
+          <CardDescription>
+            Password reset is not available yet. Use your existing password or contact your team admin.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit}>
@@ -49,7 +47,9 @@ export default function ForgotPassword() {
             />
             {error && <p className="text-xs text-destructive">{error}</p>}
             {success && <p className="text-xs text-emerald-600">Reset email sent (mock).</p>}
-            <Button type="submit" className="w-full h-11">Send reset link</Button>
+            <Button type="submit" className="w-full h-11" disabled>
+              Send reset link (coming soon)
+            </Button>
             <Button type="button" variant="ghost" className="w-full h-11" onClick={() => router.push("/auth/login")}>
               Back to login
             </Button>

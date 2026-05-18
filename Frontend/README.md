@@ -19,7 +19,13 @@ npm run dev
 
 Mở trình duyệt tại **http://localhost:3000** (cổng mặc định trong `package.json`).
 
-Dữ liệu hiện dùng **mock** trong code; không cần cấu hình API để xem giao diện.
+### Kết nối backend (bắt buộc cho đăng nhập / favorites)
+
+1. Sao chép env: `cp .env.example .env.local`
+2. Chỉnh `NEXT_PUBLIC_API_BASE_URL=http://localhost:4000` (mặc định trong `.env.example`)
+3. Bật backend (xem README gốc repo → `backend/`)
+
+Feed bài báo vẫn **mock**; **auth, profile, favorites** gọi API thật.
 
 ## Scripts
 
@@ -39,9 +45,13 @@ Thư mục `.next` được tạo khi chạy `dev` / `build`; không commit (đ�
 - `src/components/` — layout, paper card, …
 - `components/ui/` — component UI (shadcn-style)
 
-## Biến môi trường (tùy chọn)
+## Biến môi trường
 
-File [`.env.example`](.env.example) chứa placeholder cho tích hợp sau này (ví dụ OpenAI). **Hiện tại app không đọc các biến này** để chạy UI. Nếu sau này thêm tính năng AI hoặc backend, có thể tạo `.env.local` (không commit) và điền giá trị thật.
+| Biến | Mô tả |
+|------|--------|
+| `NEXT_PUBLIC_API_BASE_URL` | URL API backend (mặc định `http://localhost:4000`) |
+
+Tạo `Frontend/.env.local` từ [`.env.example`](.env.example). File `.env.local` không commit.
 
 ## Build production
 
