@@ -1,7 +1,21 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { useRouter } from "next/navigation";
 import { MOCK_NOTIFICATIONS, MOCK_PAPERS, MOCK_TOPICS } from "@/src/mockData";
+import { loginUser, logoutUser, registerUser } from "@/src/lib/auth-api";
+import { ApiError, setUnauthorizedHandler, tokenStore } from "@/src/lib/api-client";
+import { addFavorite, listFavorites, removeFavorite } from "@/src/lib/favorites-api";
+import { getCurrentUser } from "@/src/lib/users-api";
+import { apiUserToUser } from "@/src/lib/user-mapper";
+import { isValidPaperId } from "@/src/lib/validation";
 import { Notification, Paper, Topic, User } from "@/src/types";
 
 type SortMode = "newest" | "score";
@@ -16,12 +30,14 @@ interface AppStateContextValue {
   topics: Topic[];
   notifications: Notification[];
   auth: AuthState;
+  favoriteIds: Set<string>;
   searchQuery: string;
   selectedTopic: string | null;
   favoritesOnly: boolean;
   similarOnly: boolean;
   sortMode: SortMode;
   isHydrated: boolean;
+  authLoading: boolean;
   setSearchQuery: (value: string) => void;
   setSelectedTopic: (topic: string | null) => void;
   setFavoritesOnly: (value: boolean) => void;
@@ -30,10 +46,11 @@ interface AppStateContextValue {
   addTopic: (name: string) => void;
   editTopic: (id: string, name: string) => void;
   deleteTopic: (id: string) => void;
-  toggleFavorite: (paperId: string) => void;
-  login: (email: string) => void;
-  register: (name: string, email: string) => void;
-  logout: () => void;
+  toggleFavorite: (paperId: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (displayName: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   requestPasswordReset: (email: string) => boolean;
   fetchNewPapers: () => void;
   markNotificationAsRead: (id: string) => void;
@@ -44,12 +61,18 @@ interface PersistedState {
   papers: Paper[];
   topics: Topic[];
   notifications: Notification[];
-  auth: AuthState;
 }
 
-const STORAGE_KEY = "arxivscope-frontend-state-v1";
+const STORAGE_KEY = "arxivscope-frontend-state-v2";
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
+
+function applyFavoriteIds(papers: Paper[], favoriteIds: Set<string>): Paper[] {
+  return papers.map((paper) => ({
+    ...paper,
+    isBookmarked: favoriteIds.has(paper.id),
+  }));
+}
 
 function buildMockPaper(topics: Topic[]): Paper {
   const fallbackTopic = topics[0]?.name ?? "General AI";
@@ -58,7 +81,7 @@ function buildMockPaper(topics: Topic[]): Paper {
   const suffix = Math.random().toString(36).slice(2, 7);
   const title = `New Insights in ${chosenTopic} (${now.getFullYear()})`;
   return {
-    id: `new-${Date.now()}-${suffix}`,
+    id: `2401.${suffix}`,
     title,
     authors: ["Auto Curator", "ArxivScope Bot"],
     publishDate: now.toISOString().slice(0, 10),
@@ -74,36 +97,169 @@ function buildMockPaper(topics: Topic[]): Paper {
 }
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [papers, setPapers] = useState<Paper[]>(MOCK_PAPERS);
   const [topics, setTopics] = useState<Topic[]>(MOCK_TOPICS);
   const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
   const [auth, setAuth] = useState<AuthState>({ isAuthenticated: false, user: null });
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [similarOnly, setSimilarOnly] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("newest");
   const [isHydrated, setIsHydrated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  const syncFavoritesToPapers = useCallback((ids: Set<string>) => {
+    setFavoriteIds(ids);
+    setPapers((current) => applyFavoriteIds(current, ids));
+  }, []);
+
+  const loadFavorites = useCallback(async () => {
+    const { favorites } = await listFavorites();
+    syncFavoritesToPapers(new Set(favorites.map((f) => f.paperId)));
+  }, [syncFavoritesToPapers]);
+
+  const establishSession = useCallback(
+    async (token: string, user: User) => {
+      tokenStore.set(token);
+      setAuth({ isAuthenticated: true, user });
+      await loadFavorites();
+    },
+    [loadFavorites],
+  );
+
+  const clearSession = useCallback(() => {
+    tokenStore.clear();
+    setAuth({ isAuthenticated: false, user: null });
+    syncFavoritesToPapers(new Set());
+  }, [syncFavoritesToPapers]);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearSession();
+      router.replace("/auth/login");
+    });
+    return () => setUnauthorizedHandler(null);
+  }, [clearSession, router]);
 
   useEffect(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const persisted = JSON.parse(raw) as PersistedState;
-      if (persisted.papers) setPapers(persisted.papers);
-      if (persisted.topics) setTopics(persisted.topics);
-      if (persisted.notifications) setNotifications(persisted.notifications);
-      if (persisted.auth) setAuth(persisted.auth);
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const persisted = JSON.parse(raw) as PersistedState;
+        if (persisted.papers?.length) setPapers(persisted.papers);
+        if (persisted.topics?.length) setTopics(persisted.topics);
+        if (persisted.notifications?.length) setNotifications(persisted.notifications);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
     }
     setIsHydrated(true);
   }, []);
 
   useEffect(() => {
-    const persisted: PersistedState = { papers, topics, notifications, auth };
+    if (!isHydrated) return;
+
+    let cancelled = false;
+    (async () => {
+      const token = tokenStore.get();
+      if (!token) {
+        if (!cancelled) setAuthLoading(false);
+        return;
+      }
+      try {
+        const apiUser = await getCurrentUser();
+        if (cancelled) return;
+        setAuth({ isAuthenticated: true, user: apiUserToUser(apiUser) });
+        await loadFavorites();
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          clearSession();
+        }
+      } finally {
+        if (!cancelled) setAuthLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, loadFavorites, clearSession]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    const persisted: PersistedState = { papers, topics, notifications };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
-  }, [papers, topics, notifications, auth]);
+  }, [papers, topics, notifications, isHydrated]);
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const { user, token } = await loginUser({
+        email: email.trim(),
+        password,
+      });
+      await establishSession(token, apiUserToUser(user));
+    },
+    [establishSession],
+  );
+
+  const register = useCallback(
+    async (displayName: string, email: string, password: string) => {
+      const trimmedName = displayName.trim();
+      const { user, token } = await registerUser({
+        email: email.trim(),
+        password,
+        displayName: trimmedName || undefined,
+      });
+      await establishSession(token, apiUserToUser(user));
+    },
+    [establishSession],
+  );
+
+  const logout = useCallback(async () => {
+    try {
+      await logoutUser();
+    } catch {
+      // Logout is idempotent; always clear local session.
+    }
+    clearSession();
+  }, [clearSession]);
+
+  const refreshUser = useCallback(async () => {
+    const apiUser = await getCurrentUser();
+    setAuth({ isAuthenticated: true, user: apiUserToUser(apiUser) });
+  }, []);
+
+  const toggleFavorite = useCallback(
+    async (paperId: string) => {
+      if (!auth.isAuthenticated) return;
+      if (!isValidPaperId(paperId)) return;
+
+      const wasBookmarked = favoriteIds.has(paperId);
+      const previousIds = new Set(favoriteIds);
+      const nextIds = new Set(favoriteIds);
+      if (wasBookmarked) {
+        nextIds.delete(paperId);
+      } else {
+        nextIds.add(paperId);
+      }
+      syncFavoritesToPapers(nextIds);
+
+      try {
+        if (wasBookmarked) {
+          await removeFavorite(paperId);
+        } else {
+          await addFavorite(paperId);
+        }
+      } catch {
+        syncFavoritesToPapers(previousIds);
+        throw new Error("Could not update favorite. Please try again.");
+      }
+    },
+    [auth.isAuthenticated, favoriteIds, syncFavoritesToPapers],
+  );
 
   const value = useMemo<AppStateContextValue>(
     () => ({
@@ -111,12 +267,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       topics,
       notifications,
       auth,
+      favoriteIds,
       searchQuery,
       selectedTopic,
       favoritesOnly,
       similarOnly,
       sortMode,
       isHydrated,
+      authLoading,
       setSearchQuery,
       setSelectedTopic,
       setFavoritesOnly,
@@ -133,37 +291,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       editTopic: (id: string, name: string) => {
         const trimmed = name.trim();
         if (!trimmed) return;
-        setTopics((current) => current.map((topic) => (topic.id === id ? { ...topic, name: trimmed } : topic)));
+        setTopics((current) =>
+          current.map((topic) => (topic.id === id ? { ...topic, name: trimmed } : topic)),
+        );
       },
       deleteTopic: (id: string) => {
         setTopics((current) => current.filter((topic) => topic.id !== id));
       },
-      toggleFavorite: (paperId: string) => {
-        setPapers((current) =>
-          current.map((paper) =>
-            paper.id === paperId ? { ...paper, isBookmarked: !paper.isBookmarked } : paper,
-          ),
-        );
-      },
-      login: (email: string) => {
-        setAuth({
-          isAuthenticated: true,
-          user: { id: "user-1", name: "Demo User", email },
-        });
-      },
-      register: (name: string, email: string) => {
-        setAuth({
-          isAuthenticated: true,
-          user: { id: "user-1", name, email },
-        });
-      },
-      logout: () => {
-        setAuth({ isAuthenticated: false, user: null });
-      },
-      requestPasswordReset: (email: string) => email.includes("@"),
+      toggleFavorite,
+      login,
+      register,
+      logout,
+      refreshUser,
+      requestPasswordReset: () => false,
       fetchNewPapers: () => {
         const paper = buildMockPaper(topics);
-        setPapers((current) => [paper, ...current]);
+        setPapers((current) => applyFavoriteIds([paper, ...current], favoriteIds));
         setTopics((current) =>
           current.map((topic) =>
             paper.topics.includes(topic.name) ? { ...topic, count: topic.count + 1 } : topic,
@@ -190,7 +333,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         setNotifications((current) => current.map((notif) => ({ ...notif, isRead: true })));
       },
     }),
-    [papers, topics, notifications, auth, searchQuery, selectedTopic, favoritesOnly, similarOnly, sortMode, isHydrated],
+    [
+      papers,
+      topics,
+      notifications,
+      auth,
+      favoriteIds,
+      searchQuery,
+      selectedTopic,
+      favoritesOnly,
+      similarOnly,
+      sortMode,
+      isHydrated,
+      authLoading,
+      toggleFavorite,
+      login,
+      register,
+      logout,
+      refreshUser,
+    ],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

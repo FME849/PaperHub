@@ -8,16 +8,16 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { auth, isHydrated } = useAppState();
+  const { auth, isHydrated, authLoading } = useAppState();
   const router = useRouter();
 
   useEffect(() => {
-    if (isHydrated && !auth.isAuthenticated) {
-      router.push("/auth/login");
+    if (isHydrated && !authLoading && !auth.isAuthenticated) {
+      router.replace("/auth/login");
     }
-  }, [auth.isAuthenticated, isHydrated, router]);
+  }, [auth.isAuthenticated, authLoading, isHydrated, router]);
 
-  if (!isHydrated || !auth.isAuthenticated) return null;
+  if (!isHydrated || authLoading || !auth.isAuthenticated) return null;
 
   return (
     <div className="flex min-h-screen bg-background">

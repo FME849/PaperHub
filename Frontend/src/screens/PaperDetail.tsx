@@ -18,6 +18,7 @@ import { motion } from 'motion/react';
 import { Separator } from '@/components/ui/separator';
 import PaperCard from '@/src/components/papers/PaperCard';
 import { useAppState } from '@/src/state/AppStateContext';
+import { toast } from 'sonner';
 
 export default function PaperDetail({ id }: { id: string }) {
   const { papers, toggleFavorite } = useAppState();
@@ -69,7 +70,16 @@ export default function PaperDetail({ id }: { id: string }) {
                 <span>Published {new Date(paper.publishDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
             </div>
             <div className="flex items-center gap-2 ml-auto">
-                <Button variant="outline" size="sm" className="h-9 rounded-full gap-2" onClick={() => toggleFavorite(paper.id)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 rounded-full gap-2"
+                  onClick={() => {
+                    void toggleFavorite(paper.id).catch((err: Error) =>
+                      toast.error(err.message ?? "Could not update favorite."),
+                    );
+                  }}
+                >
                     <Bookmark className="w-4 h-4" fill={paper.isBookmarked ? "currentColor" : "none"} />
                     {paper.isBookmarked ? "Saved" : "Save"}
                 </Button>
