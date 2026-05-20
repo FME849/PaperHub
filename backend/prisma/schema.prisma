@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id           Int        @id @default(autoincrement())
-  email        String     @unique @db.VarChar(254)
-  passwordHash String     @db.VarChar(60)
-  displayName  String     @db.VarChar(80)
-  bio          String?    @db.VarChar(500)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  favorites    Favorite[]
+  id            Int            @id @default(autoincrement())
+  email         String         @unique @db.VarChar(254)
+  passwordHash  String         @db.VarChar(60)
+  displayName   String         @db.VarChar(80)
+  bio           String?        @db.VarChar(500)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  favorites     Favorite[]
+  trackedTopics TrackedTopic[]
 }
 
 model Favorite {
@@ -27,4 +28,76 @@ model Favorite {
 
   @@unique([userId, paperId])
   @@index([userId, createdAt(sort: Desc)])
+}
+
+model TrackedTopic {
+  id            String    @id @default(cuid())
+  userId        Int
+  name          String    @db.VarChar(120)
+  nameLower     String    @db.VarChar(120)
+  keywords      Json
+  sourceFilters Json
+  lastFetchedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches TopicPaperMatch[]
+
+  @@unique([userId, nameLower])
+  @@index([userId])
+  @@index([lastFetchedAt])
+}
+
+model Paper {
+  id             String   @id @default(cuid())
+  primarySource  String   @db.VarChar(32)
+  sourcePaperId  String   @db.VarChar(64)
+  title          String   @db.Text
+  abstract       String   @db.Text
+  authors        Json
+  sourceUrl      String   @db.VarChar(512)
+  publishedAt    DateTime
+  firstFetchedAt DateTime @default(now())
+
+  matches TopicPaperMatch[]
+
+  @@unique([primarySource, sourcePaperId])
+  @@index([publishedAt])
+}
+
+model TopicPaperMatch {
+  id             String   @id @default(cuid())
+  trackedTopicId String
+  paperId        String
+  fetchedAt      DateTime @default(now())
+  cycleId        String?
+
+  trackedTopic TrackedTopic @relation(fields: [trackedTopicId], references: [id], onDelete: Cascade)
+  paper        Paper        @relation(fields: [paperId], references: [id], onDelete: Restrict)
+  cycle        FetchCycle?  @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+
+  @@unique([trackedTopicId, paperId])
+  @@index([trackedTopicId, fetchedAt(sort: Desc)])
+  @@index([paperId])
+}
+
+enum FetchCycleStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+  PARTIAL
+}
+
+model FetchCycle {
+  id         String           @id @default(cuid())
+  startedAt  DateTime         @default(now())
+  finishedAt DateTime?
+  status     FetchCycleStatus @default(RUNNING)
+  stats      Json             @default("{}")
+
+  matches TopicPaperMatch[]
+
+  @@index([startedAt(sort: Desc)])
+  @@index([status])
 }
