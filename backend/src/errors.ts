@@ -41,3 +41,58 @@ export class ValidationFailedError extends DomainError {
     super(400, "VALIDATION_FAILED", "Validation failed.", details);
   }
 }
+
+export class TopicLimitExceededError extends DomainError {
+  constructor(limit: number, current: number) {
+    super(
+      409,
+      "TOPIC_LIMIT_EXCEEDED",
+      `You have reached the maximum number of tracked topics (${limit}).`,
+      { limit, current },
+    );
+  }
+}
+
+export class DuplicateTopicNameError extends DomainError {
+  constructor(name: string) {
+    super(
+      409,
+      "DUPLICATE_TOPIC_NAME",
+      `You already have a topic named "${name}".`,
+    );
+  }
+}
+
+export class UnknownSourceFilterError extends DomainError {
+  constructor(unknownValues: string[]) {
+    super(
+      422,
+      "UNKNOWN_SOURCE_FILTER",
+      `One or more source filters are not recognized: ${unknownValues.join(", ")}.`,
+      { unknownValues },
+    );
+  }
+}
+
+export class UnknownTopicError extends DomainError {
+  constructor() {
+    super(404, "NOT_FOUND", "Topic not found.");
+  }
+}
+
+export class ArxivClientError extends DomainError {
+  constructor(message: string, details?: unknown) {
+    super(502, "ARXIV_CLIENT_ERROR", message, details);
+  }
+}
+
+export class ArxivResponseShapeError extends DomainError {
+  constructor(details: unknown) {
+    super(
+      502,
+      "ARXIV_RESPONSE_SHAPE_ERROR",
+      "arXiv returned a response in an unexpected shape.",
+      details,
+    );
+  }
+}

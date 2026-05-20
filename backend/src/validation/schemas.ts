@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import { env } from "../config/env.js";
+import { isKnownSourceFilter } from "../config/sources.js";
+
 const emailSchema = z
   .string()
   .trim()
@@ -20,10 +23,7 @@ const displayNameSchema = z
   .min(1, "Display name is required.")
   .max(80, "Display name is too long.");
 
-const bioSchema = z
-  .string()
-  .trim()
-  .max(500, "Bio is too long.");
+const bioSchema = z.string().trim().max(500, "Bio is too long.");
 
 export const registerSchema = z.object({
   email: emailSchema,
@@ -69,8 +69,94 @@ export const paperIdParamSchema = z.object({
   paperId: paperIdSchema,
 });
 
+// ---------------------------------------------------------------------------
+// Tracked topics (002-topic-subscription)
+// ---------------------------------------------------------------------------
+
+const topicNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Name is required.")
+  .max(env.MAX_TOPIC_NAME_LENGTH, `Name must be at most ${env.MAX_TOPIC_NAME_LENGTH} characters.`);
+
+const keywordSchema = z
+  .string()
+  .trim()
+  .min(1, "Keyword must be non-empty.")
+  .max(env.MAX_KEYWORD_LENGTH, `Keyword must be at most ${env.MAX_KEYWORD_LENGTH} characters.`);
+
+const keywordsArraySchema = z
+  .array(keywordSchema)
+  .min(1, "At least one keyword is required.")
+  .max(env.MAX_KEYWORDS_PER_TOPIC, `At most ${env.MAX_KEYWORDS_PER_TOPIC} keywords allowed.`);
+
+const sourceFilterSchema = z
+  .string()
+  .trim()
+  .min(1, "Source filter is required.")
+  .refine(isKnownSourceFilter, {
+    message: "Source filter is not recognized.",
+  });
+
+const sourceFiltersArraySchema = z
+  .array(sourceFilterSchema)
+  .min(1, "At least one source filter is required.")
+  .max(env.MAX_FILTERS_PER_TOPIC, `At most ${env.MAX_FILTERS_PER_TOPIC} source filters allowed.`);
+
+export const createTopicSchema = z.object({
+  name: topicNameSchema,
+  keywords: keywordsArraySchema,
+  sourceFilters: sourceFiltersArraySchema,
+});
+
+export const updateTopicSchema = z
+  .object({
+    name: topicNameSchema.optional(),
+    keywords: keywordsArraySchema.optional(),
+    sourceFilters: sourceFiltersArraySchema.optional(),
+  })
+  .refine(
+    (value) =>
+      value.name !== undefined ||
+      value.keywords !== undefined ||
+      value.sourceFilters !== undefined,
+    { message: "At least one field is required." },
+  );
+
+export const listTopicsQuerySchema = z.object({
+  sort: z.enum(["createdAt", "updatedAt", "name"]).optional().default("createdAt"),
+  order: z.enum(["asc", "desc"]).optional().default("desc"),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .default(50),
+  cursor: z.string().min(1).max(200).optional(),
+});
+
+export const topicIdParamSchema = z.object({
+  id: z.string().min(1, "Topic id is required."),
+});
+
+export const topicPapersQuerySchema = z.object({
+  sort: z.enum(["publishedAt", "fetchedAt"]).optional().default("publishedAt"),
+  order: z.enum(["asc", "desc"]).optional().default("desc"),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  cursor: z.string().min(1).max(200).optional(),
+});
+
+export const topicPapersParamSchema = z.object({
+  topicId: z.string().min(1, "Topic id is required."),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type AddFavoriteInput = z.infer<typeof addFavoriteSchema>;
+export type CreateTopicInput = z.infer<typeof createTopicSchema>;
+export type UpdateTopicInput = z.infer<typeof updateTopicSchema>;
+export type ListTopicsQuery = z.infer<typeof listTopicsQuerySchema>;
+export type TopicPapersQuery = z.infer<typeof topicPapersQuerySchema>;
