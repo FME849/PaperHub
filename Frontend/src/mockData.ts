@@ -10,7 +10,7 @@ export const MOCK_TOPICS: Topic[] = [
 
 export const MOCK_PAPERS: Paper[] = [
   {
-    id: 'p1',
+    id: '1706.03762',
     title: 'Attention Is All You Need',
     authors: ['Ashish Vaswani', 'Noam Shazeer', 'Niki Parmar'],
     publishDate: '2017-06-12',
@@ -23,7 +23,7 @@ export const MOCK_PAPERS: Paper[] = [
     impactFactor: 9.8,
   },
   {
-    id: 'p2',
+    id: '2005.14165',
     title: 'Language Models are Few-Shot Learners',
     authors: ['Tom B. Brown', 'Benjamin Mann', 'Nick Ryder'],
     publishDate: '2020-05-28',
@@ -37,7 +37,7 @@ export const MOCK_PAPERS: Paper[] = [
     isSimilar: true,
   },
   {
-    id: 'p3',
+    id: '1601.00001',
     title: 'Mastering the Game of Go with Deep Neural Networks and Tree Search',
     authors: ['David Silver', 'Aja Huang', 'Chris J. Maddison'],
     publishDate: '2016-01-28',
@@ -50,7 +50,7 @@ export const MOCK_PAPERS: Paper[] = [
     impactFactor: 8.9,
   },
   {
-    id: 'p4',
+    id: '2304.02643',
     title: 'Segment Anything',
     authors: ['Alexander Kirillov', 'Eric Mintun', 'Nikhila Ravi'],
     publishDate: '2023-04-05',

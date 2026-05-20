@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   BookOpen, 
   Hash, 
@@ -19,12 +19,19 @@ const navItems = [
   { icon: Hash, label: 'Topics', href: '/topics' },
   { icon: Star, label: 'Favorites', href: '/favorites' },
   { icon: BarChart3, label: 'Statistics', href: '/statistics' },
+  { icon: Settings, label: 'Profile', href: '/profile' },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const currentPath = pathname ?? "/";
   const { logout } = useAppState();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/auth/login");
+  };
 
   const isActive = (href: string) => {
     if (href === "/") return currentPath === "/";
@@ -62,18 +69,14 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t space-y-1">
-        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:text-primary hover:bg-secondary/50 text-sm transition-colors">
-          <Settings className="w-4 h-4" />
-          Settings
-        </button>
-        <Link 
-          href="/auth/login"
-          onClick={() => logout()}
+        <button
+          type="button"
+          onClick={() => void handleLogout()}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-sm transition-colors"
         >
           <LogOut className="w-4 h-4" />
           Logout
-        </Link>
+        </button>
       </div>
     </aside>
   );
