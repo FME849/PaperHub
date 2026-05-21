@@ -11,13 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { auth, isHydrated, authLoading } = useAppState();
   const router = useRouter();
 
-  useEffect(() => {
-    if (isHydrated && !authLoading && !auth.isAuthenticated) {
-      router.replace("/auth/login");
-    }
-  }, [auth.isAuthenticated, authLoading, isHydrated, router]);
-
-  if (!isHydrated || authLoading || !auth.isAuthenticated) return null;
+  if (!isHydrated || authLoading) return null;
 
   return (
     <div className="flex min-h-screen bg-background">

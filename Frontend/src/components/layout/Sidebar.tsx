@@ -9,7 +9,8 @@ import {
   BarChart3, 
   LayoutDashboard, 
   Settings,
-  LogOut
+  LogOut,
+  LogIn
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppState } from '@/src/state/AppStateContext';
@@ -25,7 +26,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const currentPath = pathname ?? "/";
-  const { logout } = useAppState();
+  const { auth, logout } = useAppState();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -69,14 +70,25 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t space-y-1">
-        <button
-          type="button"
-          onClick={() => void handleLogout()}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-sm transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          Logout
-        </button>
+        {auth.isAuthenticated ? (
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-sm transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => router.push("/auth/login")}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 text-sm transition-colors"
+          >
+            <LogIn className="w-4 h-4" />
+            Login
+          </button>
+        )}
       </div>
     </aside>
   );

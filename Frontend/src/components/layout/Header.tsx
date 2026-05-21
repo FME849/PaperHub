@@ -86,7 +86,7 @@ export default function Header() {
             <div className="text-sm font-medium">{auth.user?.name ?? "Guest User"}</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-widest">{auth.user?.email ?? "Not signed in"}</div>
           </div>
-          <Avatar className="w-9 h-9 border ring-2 ring-background ring-offset-2 ring-primary/5 cursor-pointer" onClick={() => router.push("/auth/login")}>
+          <Avatar className="w-9 h-9 border ring-2 ring-background ring-offset-2 ring-primary/5 cursor-pointer" onClick={() => router.push("/profile")}>
             <AvatarImage src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=100" />
             <AvatarFallback>JV</AvatarFallback>
           </Avatar>

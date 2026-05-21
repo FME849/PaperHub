@@ -17,6 +17,7 @@ import { getCurrentUser } from "@/src/lib/users-api";
 import { apiUserToUser } from "@/src/lib/user-mapper";
 import { isValidPaperId } from "@/src/lib/validation";
 import { Notification, Paper, Topic, User } from "@/src/types";
+import { listTopics, createTopic, updateTopic, deleteTopic as apiDeleteTopic } from "@/src/lib/topics-api";
 
 type SortMode = "newest" | "score";
 
@@ -43,9 +44,9 @@ interface AppStateContextValue {
   setFavoritesOnly: (value: boolean) => void;
   setSimilarOnly: (value: boolean) => void;
   setSortMode: (mode: SortMode) => void;
-  addTopic: (name: string) => void;
-  editTopic: (id: string, name: string) => void;
-  deleteTopic: (id: string) => void;
+  addTopic: (name: string) => void | Promise<void>;
+  editTopic: (id: string, name: string) => void | Promise<void>;
+  deleteTopic: (id: string) => void | Promise<void>;
   toggleFavorite: (paperId: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (displayName: string, email: string, password: string) => Promise<void>;
@@ -121,19 +122,33 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     syncFavoritesToPapers(new Set(favorites.map((f) => f.paperId)));
   }, [syncFavoritesToPapers]);
 
+  const loadTopics = useCallback(async () => {
+    try {
+      const { items } = await listTopics();
+      setTopics(items.map((apiTopic) => ({
+        id: apiTopic.id,
+        name: apiTopic.name,
+        count: 0,
+      })));
+    } catch (err) {
+      console.error("Failed to load topics:", err);
+    }
+  }, []);
+
   const establishSession = useCallback(
     async (token: string, user: User) => {
       tokenStore.set(token);
       setAuth({ isAuthenticated: true, user });
-      await loadFavorites();
+      await Promise.all([loadFavorites(), loadTopics()]);
     },
-    [loadFavorites],
+    [loadFavorites, loadTopics],
   );
 
   const clearSession = useCallback(() => {
     tokenStore.clear();
     setAuth({ isAuthenticated: false, user: null });
     syncFavoritesToPapers(new Set());
+    setTopics(MOCK_TOPICS);
   }, [syncFavoritesToPapers]);
 
   useEffect(() => {
@@ -173,7 +188,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         const apiUser = await getCurrentUser();
         if (cancelled) return;
         setAuth({ isAuthenticated: true, user: apiUserToUser(apiUser) });
-        await loadFavorites();
+        await Promise.all([loadFavorites(), loadTopics()]);
       } catch (err) {
         if (err instanceof ApiError && err.status === 401) {
           clearSession();
@@ -186,7 +201,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [isHydrated, loadFavorites, clearSession]);
+  }, [isHydrated, loadFavorites, loadTopics, clearSession]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -280,23 +295,39 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setFavoritesOnly,
       setSimilarOnly,
       setSortMode,
-      addTopic: (name: string) => {
+      addTopic: async (name: string) => {
         const trimmed = name.trim();
-        if (!trimmed) return;
-        setTopics((current) => [
-          ...current,
-          { id: `topic-${Date.now()}`, name: trimmed, count: 0 },
-        ]);
+        if (!trimmed || !auth.isAuthenticated) return;
+        try {
+          const apiTopic = await createTopic({ name: trimmed, keywords: [trimmed], sourceFilters: ["arxiv:cs.AI"] });
+          setTopics((current) => [
+            ...current,
+            { id: apiTopic.id, name: apiTopic.name, count: 0 },
+          ]);
+        } catch (err) {
+          console.error("Failed to create topic:", err);
+        }
       },
-      editTopic: (id: string, name: string) => {
+      editTopic: async (id: string, name: string) => {
         const trimmed = name.trim();
-        if (!trimmed) return;
-        setTopics((current) =>
-          current.map((topic) => (topic.id === id ? { ...topic, name: trimmed } : topic)),
-        );
+        if (!trimmed || !auth.isAuthenticated) return;
+        try {
+          const apiTopic = await updateTopic(id, { name: trimmed });
+          setTopics((current) =>
+            current.map((topic) => (topic.id === id ? { ...topic, name: apiTopic.name } : topic)),
+          );
+        } catch (err) {
+          console.error("Failed to edit topic:", err);
+        }
       },
-      deleteTopic: (id: string) => {
-        setTopics((current) => current.filter((topic) => topic.id !== id));
+      deleteTopic: async (id: string) => {
+        if (!auth.isAuthenticated) return;
+        try {
+          await apiDeleteTopic(id);
+          setTopics((current) => current.filter((topic) => topic.id !== id));
+        } catch (err) {
+          console.error("Failed to delete topic:", err);
+        }
       },
       toggleFavorite,
       login,
