@@ -14,16 +14,24 @@ export default function Topics() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
-  const handleAddTopic = () => {
+  const handleAddTopic = async () => {
     if (!newTopic.trim()) return;
-    addTopic(newTopic);
-    setNewTopic('');
+    try {
+      await addTopic(newTopic);
+      setNewTopic('');
+    } catch (err: any) {
+      alert(err.message || "Failed to add topic");
+    }
   };
 
-  const removeTopic = (id: string) => {
+  const removeTopic = async (id: string) => {
     const confirmed = window.confirm("Delete this tracked topic?");
     if (!confirmed) return;
-    deleteTopic(id);
+    try {
+      await deleteTopic(id);
+    } catch (err: any) {
+      alert(err.message || "Failed to delete topic");
+    }
   };
 
   const startEdit = (id: string, currentName: string) => {
@@ -31,11 +39,15 @@ export default function Topics() {
     setEditingName(currentName);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingId || !editingName.trim()) return;
-    editTopic(editingId, editingName);
-    setEditingId(null);
-    setEditingName("");
+    try {
+      await editTopic(editingId, editingName);
+      setEditingId(null);
+      setEditingName("");
+    } catch (err: any) {
+      alert(err.message || "Failed to edit topic");
+    }
   };
 
   const normalizedQuery = searchQuery.toLowerCase().trim();

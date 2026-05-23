@@ -52,7 +52,7 @@ interface AppStateContextValue {
   register: (displayName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
-  requestPasswordReset: (email: string) => boolean;
+  requestPasswordReset: (email: string) => Promise<boolean>;
   fetchNewPapers: () => void;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
@@ -305,7 +305,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             { id: apiTopic.id, name: apiTopic.name, count: 0 },
           ]);
         } catch (err) {
-          console.error("Failed to create topic:", err);
+          throw err;
         }
       },
       editTopic: async (id: string, name: string) => {
@@ -317,7 +317,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             current.map((topic) => (topic.id === id ? { ...topic, name: apiTopic.name } : topic)),
           );
         } catch (err) {
-          console.error("Failed to edit topic:", err);
+          throw err;
         }
       },
       deleteTopic: async (id: string) => {
@@ -326,7 +326,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           await apiDeleteTopic(id);
           setTopics((current) => current.filter((topic) => topic.id !== id));
         } catch (err) {
-          console.error("Failed to delete topic:", err);
+          throw err;
         }
       },
       toggleFavorite,
@@ -334,7 +334,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       register,
       logout,
       refreshUser,
-      requestPasswordReset: () => false,
+      requestPasswordReset: async (email: string) => {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        return true;
+      },
       fetchNewPapers: () => {
         const paper = buildMockPaper(topics);
         setPapers((current) => applyFavoriteIds([paper, ...current], favoriteIds));
