@@ -1,27 +1,21 @@
 <!--
 Sync Impact Report
-Version change: 1.0.0 -> 2.0.0
+Version change: 2.0.0 -> 2.1.0
 Modified principles:
-- I. Fixed MVP Stack -> I. Fixed Product Stack
-- II. Correctness Before Optimization -> II. Layered Backend Architecture
-- III. Strict TypeScript and Readable Code -> III. Strict TypeScript and Async Code
-- IV. Resilient External Integrations -> IV. Isolated External and AI Services
-- V. Secure, Observable REST Workflows -> V. REST, Configuration, and Data Discipline
-Added sections:
-- Repository Folder Rules
-Removed sections:
-- Technology and Architecture Constraints
-- Data, API, and Scheduler Rules
+- I. Fixed Product Stack -> generalized: AI integration is now provider-agnostic
+  (MUST be isolated behind a backend service); the previously named "OpenAI API"
+  obligation is moved to Implementation Standards as the v1 default selection,
+  which is now Google Gemini (chosen for free-tier availability).
+Modified sections:
+- Implementation Standards -> added "Default AI Provider Selection" subsection
+  naming Gemini as the v1 default, with operator override via environment vars.
 Templates requiring updates:
-- ✅ .specify/templates/plan-template.md
-- ✅ .specify/templates/spec-template.md
-- ✅ .specify/templates/tasks-template.md
-- ✅ .specify/templates/commands/*.md (directory absent; no update required)
-- ✅ specs/architecture.md
-- ✅ specs/tasks.md
-- ✅ specs/001-user-auth/spec.md
-- ✅ README.md
-- ✅ AGENTS.md (already delegates to current plan; no change required)
+- ✅ .specify/templates/plan-template.md (no AI-provider references; OK)
+- ✅ .specify/templates/spec-template.md (no AI-provider references; OK)
+- ✅ .specify/templates/tasks-template.md (no AI-provider references; OK)
+- ✅ specs/003-paper-summary-search/* (updated to Gemini in plan/research/quickstart)
+- ⚠ specs/001-user-auth/* (no AI usage; no change required)
+- ⚠ specs/002-topic-subscription/* (no AI usage; no change required)
 Follow-up TODOs:
 - None
 -->
@@ -46,8 +40,9 @@ experience and communicates with the backend through REST APIs.
 
 The frontend MUST use Next.js and TypeScript. The backend MUST use Express.js
 and TypeScript. The API MUST be REST. Persistence MUST use MySQL with Prisma
-and MySQL migrations. AI integration MUST use the OpenAI API. arXiv MUST be
-the external paper source.
+and MySQL migrations. AI integration MUST be isolated behind a backend service
+(the specific provider is chosen per feature and may evolve — see Implementation
+Standards for the v1 default). arXiv MUST be the external paper source.
 
 This stack keeps the project small enough to reason about while still matching
 the product needs: a web UI, a typed REST backend, relational persistence,
@@ -129,6 +124,17 @@ migration. Relationship fields and foreign keys MUST be represented in Prisma
 models. Pagination, filtering, and sorting behavior MUST be documented in API
 contracts for list endpoints.
 
+### Default AI Provider Selection
+
+The v1 default AI provider is **Google Gemini**, accessed via the official Node
+SDK. The choice MUST be operator-configurable through environment variables so
+the provider can be swapped without code changes. Switching providers (for
+example to OpenAI, Anthropic, or a self-hosted model) MUST be documented in the
+feature plan and MUST preserve the isolation requirement in Principle IV: the
+swap MUST happen entirely inside the `external/` client and the AI service that
+wraps it, with no provider-specific types leaking into controllers,
+repositories, or other services.
+
 ## MVP Delivery Order
 
 The MVP consists of these core features, delivered in order unless the user
@@ -165,4 +171,4 @@ before a feature is considered complete. Any violation MUST be documented in
 the implementation plan with the reason, the simpler compliant alternative that
 was considered, and explicit user approval.
 
-**Version**: 2.0.0 | **Ratified**: 2026-05-09 | **Last Amended**: 2026-05-16
+**Version**: 2.1.0 | **Ratified**: 2026-05-09 | **Last Amended**: 2026-05-23
