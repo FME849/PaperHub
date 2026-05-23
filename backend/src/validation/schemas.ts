@@ -151,6 +151,52 @@ export const topicPapersParamSchema = z.object({
   topicId: z.string().min(1, "Topic id is required."),
 });
 
+// ---------------------------------------------------------------------------
+// Paper reading experience (003-paper-summary-search)
+// ---------------------------------------------------------------------------
+
+const isoDateString = z
+  .string()
+  .trim()
+  .refine((value) => !Number.isNaN(Date.parse(value)), "Must be a valid ISO-8601 date.");
+
+export const searchPapersQuerySchema = z.object({
+  q: z.string().trim().min(1, "Query is required.").max(200, "Query is too long."),
+  sort: z.enum(["relevance", "publishedAt", "matchedAt"]).optional().default("relevance"),
+  order: z.enum(["asc", "desc"]).optional().default("desc"),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(env.SEARCH_MAX_LIMIT)
+    .optional()
+    .default(env.SEARCH_DEFAULT_LIMIT),
+  cursor: z.string().min(1).max(200).optional(),
+  topicId: z.string().min(1).max(64).optional(),
+  publishedFrom: isoDateString.optional(),
+  publishedTo: isoDateString.optional(),
+  author: z.string().trim().min(1).max(100).optional(),
+});
+
+export const paperRouteIdSchema = z.object({
+  id: z.string().min(1, "Paper id is required.").max(64),
+});
+
+export const paperRelatedQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(env.RECOMMENDATIONS_MAX_LIMIT)
+    .optional()
+    .default(env.RECOMMENDATIONS_DEFAULT_LIMIT),
+});
+
+export const favoritesPapersQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  cursor: z.string().min(1).max(200).optional(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
@@ -160,3 +206,6 @@ export type CreateTopicInput = z.infer<typeof createTopicSchema>;
 export type UpdateTopicInput = z.infer<typeof updateTopicSchema>;
 export type ListTopicsQuery = z.infer<typeof listTopicsQuerySchema>;
 export type TopicPapersQuery = z.infer<typeof topicPapersQuerySchema>;
+export type SearchPapersQuery = z.infer<typeof searchPapersQuerySchema>;
+export type PaperRelatedQuery = z.infer<typeof paperRelatedQuerySchema>;
+export type FavoritesPapersQuery = z.infer<typeof favoritesPapersQuerySchema>;
