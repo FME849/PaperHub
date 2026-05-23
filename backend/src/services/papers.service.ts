@@ -1,11 +1,16 @@
-import { UnknownTopicError } from "../errors.js";
-import { paperRepository, type UpsertPaperInput } from "../repositories/paper.repository.js";
+import { UnknownPaperError, UnknownTopicError } from "../errors.js";
+import { favoriteRepository } from "../repositories/favorite.repository.js";
+import {
+  paperRepository,
+  type UpsertPaperInput,
+} from "../repositories/paper.repository.js";
 import {
   topicPaperMatchRepository,
   type ListByTopicQuery,
   type TopicPaperMatchWithPaper,
 } from "../repositories/topicPaperMatch.repository.js";
 import { trackedTopicRepository } from "../repositories/trackedTopic.repository.js";
+import { prisma } from "../db.js";
 import type { TopicPapersQuery } from "../validation/schemas.js";
 
 export interface PublicPaperItem {
@@ -28,6 +33,32 @@ export interface ListPapersForTopicResult {
   };
   items: PublicPaperItem[];
   nextCursor?: string;
+}
+
+export interface PaperDetailSummary {
+  status: "SUCCEEDED" | "PENDING_RETRY" | "NOT_SUMMARISABLE";
+  bullets: string[];
+  generatedAt: string | null;
+  model: string | null;
+  failureReason: string | null;
+}
+
+export interface PaperDetailResult {
+  paper: {
+    id: string;
+    primarySource: string;
+    sourcePaperId: string;
+    title: string;
+    abstract: string;
+    authors: string[];
+    sourceUrl: string;
+    publishedAt: string;
+    firstFetchedAt: string;
+  };
+  summary: PaperDetailSummary;
+  topics: Array<{ id: string; name: string }>;
+  isFavorited: boolean;
+  favoritedAt: string | null;
 }
 
 function toJsonStringArray(value: unknown): string[] {
@@ -88,5 +119,74 @@ export const papersService = {
   async upsertFromArxiv(input: UpsertPaperInput): Promise<string> {
     const paper = await paperRepository.upsertBySource(input);
     return paper.id;
+  },
+
+  async getPaperDetailForUser(
+    userId: number,
+    paperId: string,
+  ): Promise<PaperDetailResult> {
+    const accessible = await paperRepository.findByIdAccessibleToUser(userId, paperId);
+    if (!accessible) throw new UnknownPaperError();
+
+    const { paper, summary } = accessible;
+
+    const [favorite, topicRows] = await Promise.all([
+      favoriteRepository.findByUserAndPaper(userId, paperId),
+      prisma.topicPaperMatch.findMany({
+        where: { paperId, trackedTopic: { userId } },
+        select: { trackedTopic: { select: { id: true, name: true } } },
+      }),
+    ]);
+
+    const topics = topicRows
+      .map((r) => r.trackedTopic)
+      .filter((t): t is { id: string; name: string } => t !== null);
+
+    const summaryView: PaperDetailSummary = (() => {
+      if (summary && summary.status === "SUCCEEDED") {
+        return {
+          status: "SUCCEEDED",
+          bullets: toJsonStringArray(summary.bullets),
+          generatedAt: summary.generatedAt ? summary.generatedAt.toISOString() : null,
+          model: summary.model,
+          failureReason: null,
+        };
+      }
+      if (summary && summary.status === "NOT_SUMMARISABLE") {
+        return {
+          status: "NOT_SUMMARISABLE",
+          bullets: [],
+          generatedAt: null,
+          model: null,
+          failureReason: summary.failureReason,
+        };
+      }
+      // PENDING_RETRY or no row at all
+      return {
+        status: "PENDING_RETRY",
+        bullets: [],
+        generatedAt: null,
+        model: null,
+        failureReason: null,
+      };
+    })();
+
+    return {
+      paper: {
+        id: paper.id,
+        primarySource: paper.primarySource,
+        sourcePaperId: paper.sourcePaperId,
+        title: paper.title,
+        abstract: paper.abstract,
+        authors: toJsonStringArray(paper.authors),
+        sourceUrl: paper.sourceUrl,
+        publishedAt: paper.publishedAt.toISOString(),
+        firstFetchedAt: paper.firstFetchedAt.toISOString(),
+      },
+      summary: summaryView,
+      topics,
+      isFavorited: favorite !== null,
+      favoritedAt: favorite ? favorite.createdAt.toISOString() : null,
+    };
   },
 };
