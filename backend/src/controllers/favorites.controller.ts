@@ -4,6 +4,7 @@ import { AuthRequiredError, ValidationFailedError } from "../errors.js";
 import { favoritesService } from "../services/favorites.service.js";
 import {
   addFavoriteSchema,
+  favoritesPapersQuerySchema,
   paperIdParamSchema,
 } from "../validation/schemas.js";
 
@@ -39,5 +40,15 @@ export const favoritesController = {
     }
     await favoritesService.remove(userId, parsed.data.paperId);
     res.status(204).end();
+  },
+
+  async listPapers(req: Request, res: Response): Promise<void> {
+    const userId = requireUserId(req);
+    const query = favoritesPapersQuerySchema.safeParse(req.query);
+    if (!query.success) {
+      throw new ValidationFailedError(query.error.flatten());
+    }
+    const result = await favoritesService.listFavoritePapersWithDetails(userId, query.data);
+    res.status(200).json(result);
   },
 };

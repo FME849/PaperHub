@@ -9,6 +9,8 @@ import "./middleware/types.js";
 import { fetchCycleRepository } from "./repositories/fetchCycle.repository.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { favoritesRouter } from "./routes/favorites.routes.js";
+import { papersRouter } from "./routes/papers.routes.js";
+import { searchRouter } from "./routes/search.routes.js";
 import { sourcesRouter } from "./routes/sources.routes.js";
 import { topicsRouter } from "./routes/topics.routes.js";
 import { usersRouter } from "./routes/users.routes.js";
@@ -28,6 +30,8 @@ app.use("/api/users", usersRouter);
 app.use("/api/favorites", favoritesRouter);
 app.use("/api/topics", topicsRouter);
 app.use("/api/sources", sourcesRouter);
+app.use("/api/search", searchRouter);
+app.use("/api/papers", papersRouter);
 
 app.use(errorHandler);
 
