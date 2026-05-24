@@ -44,4 +44,17 @@ export const env = {
   MAX_NEW_PAPERS_PER_TOPIC_PER_CYCLE: optionalNumber("MAX_NEW_PAPERS_PER_TOPIC_PER_CYCLE", 50),
 
   INITIAL_FETCH_WINDOW_HOURS: optionalNumber("INITIAL_FETCH_WINDOW_HOURS", 24),
+
+  // AI provider (Gemini v1 default; provider swap stays inside external/ + ai.service)
+  GEMINI_API_KEY: optional("GEMINI_API_KEY", ""),
+  GEMINI_MODEL: optional("GEMINI_MODEL", "gemini-2.0-flash"),
+  AI_PER_CYCLE_SUMMARY_CAP: optionalNumber("AI_PER_CYCLE_SUMMARY_CAP", 50),
+  AI_TIMEOUT_MS: optionalNumber("AI_TIMEOUT_MS", 30000),
+  AI_MAX_RETRIES: optionalNumber("AI_MAX_RETRIES", 1),
+
+  // Search & recommendations
+  SEARCH_DEFAULT_LIMIT: optionalNumber("SEARCH_DEFAULT_LIMIT", 20),
+  SEARCH_MAX_LIMIT: optionalNumber("SEARCH_MAX_LIMIT", 50),
+  RECOMMENDATIONS_DEFAULT_LIMIT: optionalNumber("RECOMMENDATIONS_DEFAULT_LIMIT", 10),
+  RECOMMENDATIONS_MAX_LIMIT: optionalNumber("RECOMMENDATIONS_MAX_LIMIT", 20),
 } as const;

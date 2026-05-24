@@ -7,10 +7,20 @@ import { trackedTopicRepository } from "../repositories/trackedTopic.repository.
 
 import { arxivService } from "./arxiv.service.js";
 import { papersService } from "./papers.service.js";
+import { summariesService } from "./summaries.service.js";
 
 interface SourceStats {
   ok: number;
   fail: number;
+}
+
+interface SummariesStats {
+  attempted: number;
+  alreadySucceeded: number;
+  succeeded: number;
+  failedTransient: number;
+  notSummarisable: number;
+  skippedCap: number;
 }
 
 interface CycleStats {
@@ -22,7 +32,22 @@ interface CycleStats {
     newMatches: number;
     capped: number;
   };
+  summaries: SummariesStats;
   errors: Array<{ topicId: string; reason: string }>;
+}
+
+// Pacing between AI calls to respect Gemini's free-tier 15 RPM (4s ≥ 1/15 min).
+// research.md Decision 4.
+const AI_INTER_CALL_MS = 4000;
+let lastAiCallAt = 0;
+
+async function paceAiCall(): Promise<void> {
+  const elapsed = Date.now() - lastAiCallAt;
+  const wait = AI_INTER_CALL_MS - elapsed;
+  if (wait > 0) {
+    await new Promise((resolve) => setTimeout(resolve, wait));
+  }
+  lastAiCallAt = Date.now();
 }
 
 function asStringArray(value: unknown): string[] {
@@ -112,6 +137,36 @@ async function runTopic(
         cycleId,
       });
       if (created) newAttributions++;
+
+      // Post-persistence summarisation hook (research.md Decision 4).
+      // Bounded by AI_PER_CYCLE_SUMMARY_CAP; remainder is queued for next cycle.
+      if (stats.summaries.attempted < env.AI_PER_CYCLE_SUMMARY_CAP) {
+        stats.summaries.attempted++;
+        await paceAiCall();
+        const outcome = await summariesService.summarizeIfMissing(paperId);
+        switch (outcome.kind) {
+          case "already_succeeded":
+            stats.summaries.alreadySucceeded++;
+            break;
+          case "succeeded":
+            stats.summaries.succeeded++;
+            console.log(`[summaries] paper=${paperId} status=SUCCEEDED`);
+            break;
+          case "not_summarisable":
+            stats.summaries.notSummarisable++;
+            console.log(`[summaries] paper=${paperId} status=NOT_SUMMARISABLE reason=${outcome.reason}`);
+            break;
+          case "failed_transient":
+            stats.summaries.failedTransient++;
+            console.warn(`[summaries] paper=${paperId} transient failure: ${outcome.reason}`);
+            break;
+          case "skipped_no_paper":
+            // Should not happen — we just persisted it.
+            break;
+        }
+      } else {
+        stats.summaries.skippedCap++;
+      }
     } catch (err) {
       console.warn(
         `[fetch-cycle] topic=${topic.id} paper=${paper.sourcePaperId} attribute error: ${describeError(err)}`,
@@ -139,6 +194,14 @@ export const fetchCycleService = {
     const stats: CycleStats = {
       sources: {},
       topics: { total: 0, succeeded: 0, failed: 0, newMatches: 0, capped: 0 },
+      summaries: {
+        attempted: 0,
+        alreadySucceeded: 0,
+        succeeded: 0,
+        failedTransient: 0,
+        notSummarisable: 0,
+        skippedCap: 0,
+      },
       errors: [],
     };
 
@@ -173,6 +236,7 @@ export const fetchCycleService = {
       `[fetch-cycle] cycle=${cycle.id} ${status} stats=${JSON.stringify({
         sources: stats.sources,
         topics: stats.topics,
+        summaries: stats.summaries,
       })}`,
     );
 

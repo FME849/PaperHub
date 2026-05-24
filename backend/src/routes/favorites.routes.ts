@@ -11,6 +11,10 @@ favoritesRouter.get("/", (req, res, next) => {
   favoritesController.list(req, res).catch(next);
 });
 
+favoritesRouter.get("/papers", (req, res, next) => {
+  favoritesController.listPapers(req, res).catch(next);
+});
+
 favoritesRouter.post("/", (req, res, next) => {
   favoritesController.add(req, res).catch(next);
 });

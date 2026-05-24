@@ -96,3 +96,37 @@ export class ArxivResponseShapeError extends DomainError {
     );
   }
 }
+
+export class AiClientError extends DomainError {
+  constructor(message: string, details?: unknown) {
+    super(502, "AI_CLIENT_ERROR", message, details);
+  }
+}
+
+export class AiResponseShapeError extends DomainError {
+  constructor(details: unknown) {
+    super(
+      502,
+      "AI_RESPONSE_SHAPE_ERROR",
+      "AI service returned a response in an unexpected shape.",
+      details,
+    );
+  }
+}
+
+export class SummarizationCapReachedError extends DomainError {
+  constructor(cap: number) {
+    super(
+      409,
+      "SUMMARY_CAP_REACHED",
+      `Per-cycle summarisation cap (${cap}) reached.`,
+      { cap },
+    );
+  }
+}
+
+export class UnknownPaperError extends DomainError {
+  constructor() {
+    super(404, "PAPER_NOT_FOUND", "Paper not found.");
+  }
+}

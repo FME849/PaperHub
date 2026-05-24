@@ -61,9 +61,34 @@ model Paper {
   firstFetchedAt DateTime @default(now())
 
   matches TopicPaperMatch[]
+  summary PaperSummary?
+
+  // FULLTEXT(title, abstract) index added by 0003 migration via raw SQL.
 
   @@unique([primarySource, sourcePaperId])
   @@index([publishedAt])
+}
+
+enum PaperSummaryStatus {
+  PENDING_RETRY
+  SUCCEEDED
+  NOT_SUMMARISABLE
+}
+
+model PaperSummary {
+  id            String             @id @default(cuid())
+  paperId       String             @unique
+  bullets       Json
+  status        PaperSummaryStatus @default(PENDING_RETRY)
+  model         String?            @db.VarChar(64)
+  failureReason String?            @db.VarChar(255)
+  generatedAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  paper Paper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@index([status])
 }
 
 model TopicPaperMatch {
