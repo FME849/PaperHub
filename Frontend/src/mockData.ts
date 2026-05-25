@@ -72,6 +72,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     date: '2 hours ago',
     isRead: false,
     type: 'new_paper',
+    paperId: '1706.03762',
   },
   {
     id: 'n2',
@@ -80,5 +81,6 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     date: '1 day ago',
     isRead: true,
     type: 'similar_content',
+    paperId: '2005.14165',
   },
 ];

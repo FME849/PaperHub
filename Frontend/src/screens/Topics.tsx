@@ -61,7 +61,7 @@ export default function Topics() {
         <div>
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground">Interest Graph</h1>
           <p className="text-muted-foreground mt-3 max-w-lg leading-relaxed">
-            Configure the specific domains you wish to track. ArxivScope will prioritize 
+            Configure the specific domains you wish to track. Paper Hub will prioritize 
             discoverability for these topics.
           </p>
         </div>

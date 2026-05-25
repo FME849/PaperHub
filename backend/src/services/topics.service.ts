@@ -12,6 +12,7 @@ import {
   trackedTopicRepository,
   type ListTrackedTopicsQuery,
 } from "../repositories/trackedTopic.repository.js";
+import { fetchCycleService } from "./fetchCycle.service.js";
 import type {
   CreateTopicInput,
   ListTopicsQuery,
@@ -108,6 +109,12 @@ export const topicsService = {
         keywords,
         sourceFilters,
       });
+
+      // Trigger automatic background fetch cycle so the new topic is immediately populated
+      fetchCycleService.run().catch((err) => {
+        console.error("[background-fetch] Auto fetch failed for new topic:", err);
+      });
+
       return toPublic(created);
     } catch (err) {
       if (isPrismaUniqueViolation(err)) {

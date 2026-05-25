@@ -62,6 +62,7 @@ export interface ApiTopicPaper {
 export interface ListTopicPapersResponse {
   items: ApiTopicPaper[];
   nextCursor?: string;
+  totalCount?: number;
 }
 
 export async function listTopicPapers(topicId: string, query: { limit?: number; cursor?: string } = {}): Promise<ListTopicPapersResponse> {

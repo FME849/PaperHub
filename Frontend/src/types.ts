@@ -34,4 +34,5 @@ export interface Notification {
   date: string;
   isRead: boolean;
   type: 'new_paper' | 'similar_content' | 'topic_alert';
+  paperId?: string;
 }

@@ -17,7 +17,7 @@ import { getCurrentUser } from "@/src/lib/users-api";
 import { apiUserToUser } from "@/src/lib/user-mapper";
 import { isValidPaperId } from "@/src/lib/validation";
 import { Notification, Paper, Topic, User } from "@/src/types";
-import { listTopics, createTopic, updateTopic, deleteTopic as apiDeleteTopic } from "@/src/lib/topics-api";
+import { listTopics, createTopic, updateTopic, deleteTopic as apiDeleteTopic, listTopicPapers } from "@/src/lib/topics-api";
 
 type SortMode = "newest" | "score";
 
@@ -84,7 +84,7 @@ function buildMockPaper(topics: Topic[]): Paper {
   return {
     id: `2401.${suffix}`,
     title,
-    authors: ["Auto Curator", "ArxivScope Bot"],
+    authors: ["Auto Curator", "Paper Hub Bot"],
     publishDate: now.toISOString().slice(0, 10),
     sourceUrl: "https://arxiv.org",
     abstract: `This is a mocked newly fetched paper in ${chosenTopic}.`,
@@ -95,6 +95,24 @@ function buildMockPaper(topics: Topic[]): Paper {
     impactFactor: Number((Math.random() * 3 + 7).toFixed(1)),
     isSimilar: Math.random() > 0.6,
   };
+}
+
+function getSourceFiltersForTopic(name: string): string[] {
+  const lower = name.toLowerCase().trim();
+  if (lower.includes("physics")) {
+    return ["arxiv:physics.gen-ph", "arxiv:physics.app-ph", "arxiv:physics.comp-ph"];
+  }
+  if (lower.includes("math")) {
+    return ["arxiv:math.GM", "arxiv:math.MP", "arxiv:math.CO"];
+  }
+  if (lower.includes("economics") || lower.includes("finance") || lower.includes("economy")) {
+    return ["arxiv:econ.GN", "arxiv:q-fin.GN"];
+  }
+  if (lower.includes("biology") || lower.includes("bio")) {
+    return ["arxiv:q-bio.OT", "arxiv:q-bio.NC"];
+  }
+  // Default to general CS / AI / Machine Learning
+  return ["arxiv:cs.AI", "arxiv:cs.LG", "arxiv:cs.CV"];
 }
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
@@ -125,11 +143,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const loadTopics = useCallback(async () => {
     try {
       const { items } = await listTopics();
-      setTopics(items.map((apiTopic) => ({
-        id: apiTopic.id,
-        name: apiTopic.name,
-        count: 0,
-      })));
+      const topicsWithCounts = await Promise.all(
+        items.map(async (apiTopic) => {
+          try {
+            const res = await listTopicPapers(apiTopic.id);
+            return {
+              id: apiTopic.id,
+              name: apiTopic.name,
+              count: res.totalCount !== undefined ? res.totalCount : (res.items?.length || 0),
+            };
+          } catch {
+            return {
+              id: apiTopic.id,
+              name: apiTopic.name,
+              count: 0,
+            };
+          }
+        })
+      );
+      setTopics(topicsWithCounts);
     } catch (err) {
       console.error("Failed to load topics:", err);
     }
@@ -299,7 +331,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         const trimmed = name.trim();
         if (!trimmed || !auth.isAuthenticated) return;
         try {
-          const apiTopic = await createTopic({ name: trimmed, keywords: [trimmed], sourceFilters: ["arxiv:cs.AI"] });
+          const apiTopic = await createTopic({
+            name: trimmed,
+            keywords: [trimmed],
+            sourceFilters: getSourceFiltersForTopic(trimmed),
+          });
           setTopics((current) => [
             ...current,
             { id: apiTopic.id, name: apiTopic.name, count: 0 },
@@ -350,10 +386,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           {
             id: `notif-${Date.now()}`,
             title: "New paper fetched",
-            message: `${paper.title} was added to your feed.`,
+            message: `"${paper.title}" was added to your feed.`,
             date: "just now",
             isRead: false,
             type: "new_paper",
+            paperId: paper.id,
           },
           ...current,
         ]);

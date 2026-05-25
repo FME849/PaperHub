@@ -30,11 +30,15 @@ export default function PaperCard({ paper }: PaperCardProps) {
         <CardHeader className="p-5 pb-2">
           <div className="flex justify-between items-start gap-4">
             <div className="flex flex-wrap gap-2">
-              {paper.topics.map(topic => (
-                <Badge key={topic} variant="secondary" className="font-normal text-[10px] py-0 tracking-wide bg-secondary/80 text-muted-foreground uppercase">
-                  {topic}
-                </Badge>
-              ))}
+              {paper.topics.map((topic, index) => {
+                const topicName = typeof topic === "string" ? topic : (topic as any).name || "";
+                const topicKey = typeof topic === "string" ? topic : (topic as any).id || index;
+                return (
+                  <Badge key={topicKey} variant="secondary" className="font-normal text-[10px] py-0 tracking-wide bg-secondary/80 text-muted-foreground uppercase">
+                    {topicName}
+                  </Badge>
+                );
+              })}
               {paper.isSimilar && (
                 <Badge variant="outline" className="text-[10px] uppercase tracking-wide text-amber-600 border-amber-200 bg-amber-50 flex gap-1 items-center">
                   <Sparkles className="w-2 h-2" />
@@ -61,7 +65,7 @@ export default function PaperCard({ paper }: PaperCardProps) {
             </h3>
           </Link>
           <div className="text-[11px] text-muted-foreground font-medium mt-1 uppercase tracking-widest">
-            {paper.authors.join(', ')} • {new Date(paper.publishDate).getFullYear()}
+            {paper.authors.join(', ')} • {new Date(paper.publishDate).getUTCFullYear()}
           </div>
         </CardHeader>
         <CardContent className="p-5 pt-3">

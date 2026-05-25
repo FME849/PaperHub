@@ -130,9 +130,9 @@ export const listTopicsQuerySchema = z.object({
     .number()
     .int()
     .min(1)
-    .max(100)
+    .max(500)
     .optional()
-    .default(50),
+    .default(100),
   cursor: z.string().min(1).max(200).optional(),
 });
 
@@ -143,7 +143,7 @@ export const topicIdParamSchema = z.object({
 export const topicPapersQuerySchema = z.object({
   sort: z.enum(["publishedAt", "fetchedAt"]).optional().default("publishedAt"),
   order: z.enum(["asc", "desc"]).optional().default("desc"),
-  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  limit: z.coerce.number().int().min(1).max(500).optional().default(100),
   cursor: z.string().min(1).max(200).optional(),
 });
 
@@ -193,7 +193,7 @@ export const paperRelatedQuerySchema = z.object({
 });
 
 export const favoritesPapersQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  limit: z.coerce.number().int().min(1).max(500).optional().default(100),
   cursor: z.string().min(1).max(200).optional(),
 });
 

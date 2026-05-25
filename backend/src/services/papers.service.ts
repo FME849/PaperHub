@@ -33,6 +33,7 @@ export interface ListPapersForTopicResult {
   };
   items: PublicPaperItem[];
   nextCursor?: string;
+  totalCount: number;
 }
 
 export interface PaperDetailSummary {
@@ -96,7 +97,10 @@ export const papersService = {
       limit: query.limit,
       cursor: query.cursor,
     };
-    const rows = await topicPaperMatchRepository.listByTopic(repoQuery);
+    const [rows, totalCount] = await Promise.all([
+      topicPaperMatchRepository.listByTopic(repoQuery),
+      prisma.topicPaperMatch.count({ where: { trackedTopicId: topicId } }),
+    ]);
 
     let nextCursor: string | undefined;
     if (rows.length > query.limit) {
@@ -112,6 +116,7 @@ export const papersService = {
         lastFetchedAt: topic.lastFetchedAt ? topic.lastFetchedAt.toISOString() : null,
       },
       items: rows.map(toPublicPaperItem),
+      totalCount,
       ...(nextCursor !== undefined ? { nextCursor } : {}),
     };
   },

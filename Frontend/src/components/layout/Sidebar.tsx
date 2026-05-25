@@ -45,7 +45,7 @@ export default function Sidebar() {
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
           <BookOpen className="w-5 h-5" />
         </div>
-        <span className="font-serif font-bold text-xl tracking-tight">ArxivScope</span>
+        <span className="font-serif font-bold text-xl tracking-tight">Paper Hub</span>
       </div>
       
       <nav className="flex-1 px-4 space-y-1">

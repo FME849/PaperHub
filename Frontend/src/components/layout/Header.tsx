@@ -25,6 +25,7 @@ export default function Header() {
     markNotificationAsRead,
     markAllNotificationsAsRead,
     auth,
+    papers,
   } = useAppState();
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const router = useRouter();
@@ -65,7 +66,33 @@ export default function Header() {
                   <DropdownMenuItem
                     key={notification.id}
                     className="block cursor-pointer"
-                    onClick={() => markNotificationAsRead(notification.id)}
+                    onClick={() => {
+                      markNotificationAsRead(notification.id);
+                      
+                      const isMockId = (id?: string) => {
+                        if (!id) return true;
+                        return id.includes(".") || ["1706.03762", "2005.14165", "1601.00001", "2304.02643"].includes(id);
+                      };
+
+                      // Check if notification points to a valid paper loaded in state
+                      if (notification.paperId && !isMockId(notification.paperId) && papers.some((p) => p.id === notification.paperId)) {
+                        router.push(`/papers/${notification.paperId}`);
+                      } else {
+                        // Fallback: Find a real paper matching the notification's topic keywords
+                        const realPapers = papers.filter((p) => !isMockId(p.id));
+                        const matchedPaper = realPapers.find((p) => {
+                          const topic = p.topics[0]?.toLowerCase() || "";
+                          return (
+                            notification.message.toLowerCase().includes(topic) ||
+                            notification.title.toLowerCase().includes(topic)
+                          );
+                        }) || realPapers[0] || papers.find((p) => !isMockId(p.id)) || papers[0];
+                        
+                        if (matchedPaper) {
+                          router.push(`/papers/${matchedPaper.id}`);
+                        }
+                      }
+                    }}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>

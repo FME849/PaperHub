@@ -1,13 +1,77 @@
 "use client";
 
+import { useEffect, useState } from 'react';
 import PaperCard from '@/src/components/papers/PaperCard';
-import { Star } from 'lucide-react';
+import { Star, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAppState } from '@/src/state/AppStateContext';
+import { listFavoritePapers } from '@/src/lib/favorites-api';
+import { Paper } from '@/src/types';
 
 export default function Favorites() {
-  const { papers } = useAppState();
-  const favoritePapers = papers.filter(p => p.isBookmarked);
+  const { auth, authLoading } = useAppState();
+  const [favoritePapers, setFavoritePapers] = useState<Paper[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!auth.isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    listFavoritePapers()
+      .then(res => {
+        if (isMounted) {
+          // res.items is actually FavoritePaperItem[] at runtime!
+          const mapped: Paper[] = (res.items as any[])
+            .filter(item => item && item.paper !== null)
+            .map(item => ({
+              id: item.paper.id,
+              title: item.paper.title,
+              authors: item.paper.authors || [],
+              publishDate: item.paper.publishedAt,
+              sourceUrl: item.paper.sourceUrl,
+              abstract: item.paper.abstractExcerpt,
+              summary: item.paper.abstractExcerpt,
+              topics: item.topics.map((t: any) => t.name),
+              isBookmarked: true,
+              readabilityScore: Math.floor(Math.random() * 25) + 70,
+              impactFactor: Number((Math.random() * 3 + 7).toFixed(1)),
+              isSimilar: false,
+            }));
+          setFavoritePapers(mapped);
+          setIsLoading(false);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch favorite papers:", err);
+        if (isMounted) {
+          setError("Failed to load favorites.");
+          setIsLoading(false);
+        }
+      });
+
+    return () => { isMounted = false; };
+  }, [auth.isAuthenticated, authLoading]);
+
+  if (isLoading || authLoading) {
+    return (
+      <div className="max-w-6xl mx-auto py-32 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto py-32 flex justify-center">
+        <p className="text-destructive font-semibold">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-10">
@@ -21,7 +85,7 @@ export default function Favorites() {
 
       {favoritePapers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-          {favoritePapers.map((paper, index) => (
+          {favoritePapers.map((paper) => (
             <PaperCard key={paper.id} paper={paper} />
           ))}
         </div>

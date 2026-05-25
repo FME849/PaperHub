@@ -1,8 +1,13 @@
 import { apiFetch } from "@/src/lib/api-client";
 import type { FavoriteItem, FavoritesListResponse } from "@/src/lib/api-types";
+import { Paper } from "@/src/types";
 
 export async function listFavorites(): Promise<FavoritesListResponse> {
   return apiFetch<FavoritesListResponse>("/api/favorites");
+}
+
+export async function listFavoritePapers(): Promise<{ items: Paper[] }> {
+  return apiFetch<{ items: Paper[] }>("/api/favorites/papers");
 }
 
 export async function addFavorite(paperId: string): Promise<FavoriteItem> {
