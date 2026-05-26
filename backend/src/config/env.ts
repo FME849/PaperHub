@@ -33,20 +33,20 @@ export const env = {
   FETCH_CRON_EXPR: optional("FETCH_CRON_EXPR", "0 3 * * *"),
 
   ARXIV_BASE_URL: optional("ARXIV_BASE_URL", "https://export.arxiv.org/api/query"),
-  ARXIV_MIN_REQUEST_INTERVAL_MS: optionalNumber("ARXIV_MIN_REQUEST_INTERVAL_MS", 3000),
-  ARXIV_MAX_RETRIES: optionalNumber("ARXIV_MAX_RETRIES", 3),
+  ARXIV_MIN_REQUEST_INTERVAL_MS: optionalNumber("ARXIV_MIN_REQUEST_INTERVAL_MS", 10000),
+  ARXIV_MAX_RETRIES: optionalNumber("ARXIV_MAX_RETRIES", 5),
 
   MAX_TOPICS_PER_USER: optionalNumber("MAX_TOPICS_PER_USER", 20),
   MAX_KEYWORDS_PER_TOPIC: optionalNumber("MAX_KEYWORDS_PER_TOPIC", 15),
   MAX_FILTERS_PER_TOPIC: optionalNumber("MAX_FILTERS_PER_TOPIC", 10),
   MAX_KEYWORD_LENGTH: optionalNumber("MAX_KEYWORD_LENGTH", 80),
   MAX_TOPIC_NAME_LENGTH: optionalNumber("MAX_TOPIC_NAME_LENGTH", 120),
-  MAX_NEW_PAPERS_PER_TOPIC_PER_CYCLE: optionalNumber("MAX_NEW_PAPERS_PER_TOPIC_PER_CYCLE", 200),
+  MAX_NEW_PAPERS_PER_TOPIC_PER_CYCLE: optionalNumber("MAX_NEW_PAPERS_PER_TOPIC_PER_CYCLE", 50),
 
-  INITIAL_FETCH_WINDOW_HOURS: optionalNumber("INITIAL_FETCH_WINDOW_HOURS", 24),
+  INITIAL_FETCH_WINDOW_HOURS: optionalNumber("INITIAL_FETCH_WINDOW_HOURS", 720),
 
   // AI provider (Gemini v1 default; provider swap stays inside external/ + ai.service)
-  GEMINI_API_KEY: optional("GEMINI_API_KEY", ""),
+  GEMINI_API_KEY: optional("GEMINI_API_KEY", "-"),
   GEMINI_MODEL: optional("GEMINI_MODEL", "gemini-2.0-flash"),
   AI_PER_CYCLE_SUMMARY_CAP: optionalNumber("AI_PER_CYCLE_SUMMARY_CAP", 100),
   AI_TIMEOUT_MS: optionalNumber("AI_TIMEOUT_MS", 30000),

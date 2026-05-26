@@ -93,7 +93,12 @@ export const trackedTopicRepository = {
   },
 
   listAllActive(): Promise<TrackedTopic[]> {
-    return prisma.trackedTopic.findMany({ orderBy: { createdAt: "asc" } });
+    return prisma.trackedTopic.findMany({
+      orderBy: [
+        { lastFetchedAt: "asc" },
+        { createdAt: "desc" }
+      ]
+    });
   },
 
   async setLastFetchedAt(topicId: string, when: Date): Promise<boolean> {
