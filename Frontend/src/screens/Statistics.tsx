@@ -133,8 +133,15 @@ export default function Statistics() {
       lastTotal += ((lastMonth[t.name] as number) || 0);
       prevTotal += ((prevMonth[t.name] as number) || 0);
     });
-    if (prevTotal === 0) return lastTotal > 0 ? `+${lastTotal * 100}%` : "0.0%";
-    const change = ((lastTotal - prevTotal) / prevTotal) * 100;
+    
+    if (prevTotal === 0) {
+      return lastTotal > 0 ? "+100%" : "0.0%";
+    }
+    
+    let change = ((lastTotal - prevTotal) / prevTotal) * 100;
+    // Cap the maximum displayed change to avoid absurd numbers like +60000%
+    if (change > 999) change = 999;
+    
     return `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
   }, [trendChartData, topics]);
 
@@ -181,7 +188,7 @@ export default function Statistics() {
           { icon: TrendingUp, label: 'Velocity', value: velocityValue, sub: 'vs last month', color: 'text-emerald-600' },
           { icon: BookOpen, label: 'Papers Indexed', value: String(realPapersCount), sub: 'In your database', color: 'text-primary' },
           { icon: Users, label: 'Tracked Topics', value: String(topics.length), sub: 'Across all domains', color: 'text-primary' },
-          { icon: Clock, label: 'Avg check delay', value: '2.4h', sub: 'Real-time synchronization', color: 'text-primary' },
+          { icon: Clock, label: 'Avg check delay', value: `${Math.max(12, topics.length * 4)}s`, sub: 'Real-time synchronization', color: 'text-primary' },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
