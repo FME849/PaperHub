@@ -9,7 +9,8 @@ import {
   Tooltip, 
   ResponsiveContainer, 
   AreaChart,
-  Area
+  Area,
+  Cell
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { motion } from 'motion/react';
@@ -296,10 +297,21 @@ export default function Statistics() {
                   />
                   <Bar 
                       dataKey="count" 
-                      fill="var(--color-primary)" 
                       radius={[0, 4, 4, 0]} 
                       barSize={20}
-                  />
+                  >
+                    {topicDistribution.map((entry, index) => {
+                      const colors = [
+                        "#3b82f6", // blue
+                        "#10b981", // emerald
+                        "#6366f1", // indigo
+                        "#f59e0b", // amber
+                        "#ec4899", // pink
+                        "#8b5cf6", // violet
+                      ];
+                      return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                    })}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             )}

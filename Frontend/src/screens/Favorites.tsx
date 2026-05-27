@@ -9,7 +9,7 @@ import { listFavoritePapers } from '@/src/lib/favorites-api';
 import { Paper } from '@/src/types';
 
 export default function Favorites() {
-  const { auth, authLoading } = useAppState();
+  const { auth, authLoading, favoriteIds } = useAppState();
   const [favoritePapers, setFavoritePapers] = useState<Paper[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +86,7 @@ export default function Favorites() {
       {favoritePapers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
           {favoritePapers.map((paper) => (
-            <PaperCard key={paper.id} paper={paper} />
+            <PaperCard key={paper.id} paper={{...paper, isBookmarked: favoriteIds.has(paper.id)}} />
           ))}
         </div>
       ) : (

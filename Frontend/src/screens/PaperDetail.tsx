@@ -234,7 +234,9 @@ export default function PaperDetail({ id }: { id: string }) {
                   variant="outline"
                   size="sm"
                   className="h-9 rounded-full gap-2"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     void toggleFavorite(paper.id).catch((err: Error) =>
                       toast.error(err.message ?? "Could not update favorite."),
                     );

@@ -49,7 +49,9 @@ export default function PaperCard({ paper }: PaperCardProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 void toggleFavorite(paper.id).catch((err: Error) =>
                   toast.error(err.message ?? "Could not update favorite."),
                 );

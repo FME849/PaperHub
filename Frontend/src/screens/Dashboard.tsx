@@ -193,7 +193,7 @@ export default function Dashboard() {
     return () => {
       isMounted = false;
     };
-  }, [selectedTopic, topics, searchQuery, favoriteIds, refreshTrigger]);
+  }, [selectedTopic, topics, searchQuery, refreshTrigger]);
 
   // Use searched papers if query exists, otherwise fallback to feed
   const activePapers = searchQuery.trim() ? searchedPapers : feedPapers;
