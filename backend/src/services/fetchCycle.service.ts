@@ -6,6 +6,7 @@ import { topicPaperMatchRepository } from "../repositories/topicPaperMatch.repos
 import { trackedTopicRepository } from "../repositories/trackedTopic.repository.js";
 
 import { arxivService } from "./arxiv.service.js";
+import { notificationsService } from "./notifications.service.js";
 import { papersService } from "./papers.service.js";
 import { summariesService } from "./summaries.service.js";
 
@@ -239,6 +240,18 @@ export const fetchCycleService = {
         summaries: stats.summaries,
       })}`,
     );
+
+    // Email digests run as the tail of the cycle (FR-001 / FR-013): same async
+    // context, no separate scheduler. Wrapped so a notification failure can
+    // never crash the cycle (FR-014); the per-user catch inside the service is
+    // the real guarantee — this is belt-and-braces.
+    if (env.NOTIFICATIONS_ENABLED) {
+      try {
+        await notificationsService.runForCycle(cycle.id);
+      } catch (err) {
+        console.error(`[notifications] runForCycle crashed for cycle=${cycle.id}:`, err);
+      }
+    }
 
     return { cycleId: cycle.id, stats };
   },
