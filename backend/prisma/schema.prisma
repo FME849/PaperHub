@@ -17,6 +17,10 @@ model User {
   updatedAt     DateTime       @updatedAt
   favorites     Favorite[]
   trackedTopics TrackedTopic[]
+
+  notificationPreference EmailNotificationPreference?
+  digestSendRecords      DigestSendRecord[]
+  emailDeliveryFailures  EmailDeliveryFailure[]
 }
 
 model Favorite {
@@ -121,8 +125,87 @@ model FetchCycle {
   status     FetchCycleStatus @default(RUNNING)
   stats      Json             @default("{}")
 
-  matches TopicPaperMatch[]
+  matches     TopicPaperMatch[]
+  sendRecords DigestSendRecord[]
 
   @@index([startedAt(sort: Desc)])
   @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Email notifications (004-paper-email-notifications)
+// ---------------------------------------------------------------------------
+
+enum PreferenceChangeSource {
+  SETTINGS_UI
+  UNSUBSCRIBE_LINK
+  SYSTEM
+}
+
+model EmailNotificationPreference {
+  id             String                 @id @default(cuid())
+  userId         Int                    @unique
+  enabled        Boolean                @default(false)
+  lastChangedVia PreferenceChangeSource @default(SETTINGS_UI)
+  lastChangedAt  DateTime               @default(now()) @updatedAt
+  createdAt      DateTime               @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum DigestSendOutcome {
+  STARTED
+  SENT
+  SUPPRESSED_PREFERENCE_OFF
+  SUPPRESSED_EMPTY
+  SUPPRESSED_BOUNCE_QUARANTINE
+  FAILED_RETRYABLE
+  FAILED_PERMANENT
+}
+
+model DigestSendRecord {
+  id                  String            @id @default(cuid())
+  userId              Int
+  fetchCycleId        String
+  outcome             DigestSendOutcome
+  candidatePaperCount Int               @default(0)
+  includedPaperIds    Json              @default("[]")
+  recipientEmail      String?           @db.VarChar(254)
+  attemptedAt         DateTime          @default(now())
+  completedAt         DateTime?
+  failureReason       String?           @db.VarChar(255)
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cycle FetchCycle @relation(fields: [fetchCycleId], references: [id], onDelete: Restrict)
+
+  deliveryFailures EmailDeliveryFailure[]
+
+  @@unique([userId, fetchCycleId])
+  @@index([fetchCycleId, outcome])
+  @@index([userId, attemptedAt(sort: Desc)])
+}
+
+enum EmailFailureClass {
+  HARD_BOUNCE
+  SOFT_BOUNCE
+  CONNECTION_ERROR
+  TIMEOUT
+  OTHER
+}
+
+model EmailDeliveryFailure {
+  id                 String            @id @default(cuid())
+  recipientEmail     String            @db.VarChar(254)
+  userId             Int?
+  failureClass       EmailFailureClass
+  smtpResponseCode   Int?
+  message            String?           @db.VarChar(500)
+  digestSendRecordId String?
+  reportedAt         DateTime          @default(now())
+
+  user       User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  digestSend DigestSendRecord? @relation(fields: [digestSendRecordId], references: [id], onDelete: SetNull)
+
+  @@index([recipientEmail, reportedAt(sort: Desc)])
+  @@index([userId])
 }
