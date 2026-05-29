@@ -1,0 +1,165 @@
+# Phase 1 Data Model: Password Reset via Email
+
+Database changes for this feature. All changes are additive: one new nullable column on `User`, two new tables, two new enums. Migration: `0005_password_reset`.
+
+---
+
+## Change to existing entity
+
+### `User` (from `001-user-auth`) — add one column
+
+| Field | Type | Notes |
+|---|---|---|
+| `passwordChangedAt` | `DateTime?` | Set to `now()` whenever the password is mutated (reset completion or authenticated change-password). `authenticate` rejects any JWT whose `iat` is earlier than this value (FR-010). Nullable: existing users have `null`, which the middleware treats as "no cutoff" (all their current tokens remain valid until the first password change). |
+
+No other `User` field changes. The existing `passwordHash`, `email`, etc. are reused.
+
+```prisma
+model User {
+  // ... existing fields ...
+  passwordChangedAt DateTime?
+
+  passwordResetRequests PasswordResetRequest[]
+  passwordResetEvents   PasswordResetAuditEvent[]
+}
+```
+
+---
+
+## New entities
+
+### 1. `PasswordResetRequest`
+
+One row per issued reset capability. At most one **active** (unexpired, unconsumed, non-invalidated) row per user — enforced in service logic by superseding prior active rows on each new request (FR-007).
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `String @id @default(cuid())` | |
+| `userId` | `Int` | FK → `User.id`, cascade on user delete. |
+| `tokenHash` | `String @unique @db.VarChar(64)` | SHA-256 hex of the raw token. The raw token is never stored (FR-015). Unique so verification is an indexed lookup. |
+| `expiresAt` | `DateTime` | `issuedAt + PASSWORD_RESET_TOKEN_TTL_MINUTES` (default 60). After this, the link is rejected (FR-006). |
+| `consumedAt` | `DateTime?` | Set when the link is successfully used. Non-null ⇒ single-use spent (FR-009). |
+| `invalidatedAt` | `DateTime?` | Set when superseded or when the password changed by another path. |
+| `invalidationReason` | `PasswordResetInvalidationReason?` | Why it was invalidated (enum below). |
+| `sendAttempts` | `Int @default(0)` | Async-send bookkeeping (FR-019). |
+| `lastSendOutcome` | `String? @db.VarChar(32)` | `sent` / `failed` / `retry_exhausted` — last async-send result. |
+| `createdAt` | `DateTime @default(now())` | Issued-at. |
+
+```prisma
+enum PasswordResetInvalidationReason {
+  SUPERSEDED        // a newer request was issued for this user
+  PASSWORD_CHANGED  // password changed via another path (e.g. authenticated change-password)
+  USED              // consumed by a successful reset
+}
+```
+
+**Indexes**: `@@unique([tokenHash])`; `@@index([userId])` (for supersede + invalidate-on-change queries); `@@index([expiresAt])` (optional cleanup sweep).
+
+**A request is "valid" iff**: `consumedAt IS NULL AND invalidatedAt IS NULL AND expiresAt > now()`. Verification computes `sha256(presentedToken)`, finds the row by `tokenHash`, then checks validity and `timingSafeEqual`.
+
+**State transitions**:
+
+```text
+        issue
+  (none) ─────▶ ACTIVE ──(success)──▶ consumedAt set, reason=USED
+                  │
+                  ├──(new request issued)──▶ invalidatedAt set, reason=SUPERSEDED
+                  ├──(password changed elsewhere)──▶ invalidatedAt set, reason=PASSWORD_CHANGED
+                  └──(time passes)──▶ expired (expiresAt < now; no row change needed)
+```
+
+---
+
+### 2. `PasswordResetAuditEvent`
+
+Operational record of reset-flow events (FR-018, FR-022). Never stores the raw link/token or any password material.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `String @id @default(cuid())` | |
+| `userId` | `Int?` | FK → `User.id`, set-null on user delete. Null for `SUPPRESSED_NO_ACCOUNT` (no account resolved) and `THROTTLED` where no account is known. |
+| `eventType` | `PasswordResetEventType` | enum below. |
+| `emailAttempted` | `String? @db.VarChar(254)` | The (lowercased) email the request targeted, for abuse analysis. Present even when no account matched. |
+| `ipHash` | `String? @db.VarChar(64)` | SHA-256 of client IP (not raw IP) for rate-limit/abuse correlation without storing PII in the clear. |
+| `detail` | `String? @db.VarChar(255)` | Short free-text (e.g. send error class). No secrets. |
+| `createdAt` | `DateTime @default(now())` | |
+
+```prisma
+enum PasswordResetEventType {
+  REQUESTED              // a reset link was issued + send dispatched
+  SUPPRESSED_NO_ACCOUNT  // request for an email with no (active) account; no email sent
+  THROTTLED              // request/verify rejected by the rate limiter
+  LINK_VERIFIED          // a token passed validation (GET validate or start of reset)
+  COMPLETED              // password successfully reset
+  SEND_FAILED            // a single async send attempt failed
+  RETRY_EXHAUSTED        // all send attempts failed
+}
+```
+
+**Indexes**: `@@index([userId, createdAt(sort: Desc)])`; `@@index([emailAttempted, createdAt(sort: Desc)])`; `@@index([ipHash, createdAt(sort: Desc)])`.
+
+---
+
+## Migration `0005_password_reset` — SQL summary
+
+Additive only; generated by `prisma migrate dev`. Reference shape:
+
+```sql
+-- User: add nullable column
+ALTER TABLE `User` ADD COLUMN `passwordChangedAt` DATETIME(3) NULL;
+
+-- PasswordResetRequest
+CREATE TABLE `PasswordResetRequest` (
+  `id`                 VARCHAR(191) NOT NULL,
+  `userId`             INT          NOT NULL,
+  `tokenHash`          VARCHAR(64)  NOT NULL,
+  `expiresAt`          DATETIME(3)  NOT NULL,
+  `consumedAt`         DATETIME(3)  NULL,
+  `invalidatedAt`      DATETIME(3)  NULL,
+  `invalidationReason` ENUM('SUPERSEDED','PASSWORD_CHANGED','USED') NULL,
+  `sendAttempts`       INT          NOT NULL DEFAULT 0,
+  `lastSendOutcome`    VARCHAR(32)  NULL,
+  `createdAt`          DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `PasswordResetRequest_tokenHash_key` (`tokenHash`),
+  INDEX `PasswordResetRequest_userId_idx` (`userId`),
+  INDEX `PasswordResetRequest_expiresAt_idx` (`expiresAt`),
+  CONSTRAINT `PasswordResetRequest_userId_fkey` FOREIGN KEY (`userId`)
+    REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB;
+
+-- PasswordResetAuditEvent
+CREATE TABLE `PasswordResetAuditEvent` (
+  `id`             VARCHAR(191) NOT NULL,
+  `userId`         INT          NULL,
+  `eventType`      ENUM('REQUESTED','SUPPRESSED_NO_ACCOUNT','THROTTLED','LINK_VERIFIED','COMPLETED','SEND_FAILED','RETRY_EXHAUSTED') NOT NULL,
+  `emailAttempted` VARCHAR(254) NULL,
+  `ipHash`         VARCHAR(64)  NULL,
+  `detail`         VARCHAR(255) NULL,
+  `createdAt`      DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  INDEX `PasswordResetAuditEvent_userId_createdAt_idx` (`userId`, `createdAt` DESC),
+  INDEX `PasswordResetAuditEvent_emailAttempted_createdAt_idx` (`emailAttempted`, `createdAt` DESC),
+  INDEX `PasswordResetAuditEvent_ipHash_createdAt_idx` (`ipHash`, `createdAt` DESC),
+  CONSTRAINT `PasswordResetAuditEvent_userId_fkey` FOREIGN KEY (`userId`)
+    REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB;
+```
+
+The exact SQL is generated by `prisma migrate dev` from the updated schema; the above is reference-only.
+
+---
+
+## Constraint summary (spec → schema/logic)
+
+| Spec invariant | Enforced by |
+|---|---|
+| FR-005 token cryptographically secure, single-use, validated before update | `tokenHash` from `randomBytes(32)`; validity check + `timingSafeEqual` before any password write |
+| FR-006 configurable expiry | `expiresAt = createdAt + PASSWORD_RESET_TOKEN_TTL_MINUTES` |
+| FR-007 single active link | service supersedes prior active rows (`invalidatedAt`, reason `SUPERSEDED`) on each new request |
+| FR-009 single-use | `consumedAt` set on success; verify rejects consumed rows |
+| FR-010 prior-session invalidation | `User.passwordChangedAt` + `authenticate` `iat` check |
+| FR-011 invalidate on any password change | shared `setPassword` sets `passwordChangedAt` and invalidates active reset rows (reason `PASSWORD_CHANGED`) |
+| FR-015 no user info in token; hashed at rest | opaque random token; only SHA-256 `tokenHash` stored |
+| FR-018/FR-022 event logging without secrets | `PasswordResetAuditEvent` (no raw token, no password); `ipHash` not raw IP |
+| FR-019 bounded retry bookkeeping | `sendAttempts`, `lastSendOutcome` |

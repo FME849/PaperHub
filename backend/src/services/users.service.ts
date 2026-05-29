@@ -6,8 +6,6 @@ import type { ChangePasswordInput, UpdateProfileInput } from "../validation/sche
 
 import { authService, type PublicUser } from "./auth.service.js";
 
-const BCRYPT_COST = 10;
-
 export const usersService = {
   async getMe(userId: number): Promise<PublicUser> {
     const user = await userRepository.findById(userId);
@@ -34,7 +32,8 @@ export const usersService = {
     if (!matches) {
       throw new InvalidCredentialsError("Invalid current password.");
     }
-    const newHash = await bcrypt.hash(input.newPassword, BCRYPT_COST);
-    await userRepository.updatePasswordHash(userId, newHash);
+    // Delegate the mutation to the shared path so password changes also stamp
+    // passwordChangedAt and invalidate outstanding reset links (FR-011).
+    await authService.setPassword(userId, input.newPassword);
   },
 };
