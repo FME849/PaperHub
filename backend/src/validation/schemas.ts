@@ -223,6 +223,23 @@ export const cyclePapersQuerySchema = z.object({
   cursor: z.string().min(1).max(200).optional(),
 });
 
+// ---------------------------------------------------------------------------
+// Password reset (005-password-reset-email)
+// ---------------------------------------------------------------------------
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token is required.").max(512),
+  newPassword: passwordStrengthSchema,
+});
+
+export const resetTokenQuerySchema = z.object({
+  token: z.string().min(1, "Token is required.").max(512),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
@@ -237,3 +254,5 @@ export type PaperRelatedQuery = z.infer<typeof paperRelatedQuerySchema>;
 export type FavoritesPapersQuery = z.infer<typeof favoritesPapersQuerySchema>;
 export type UpdatePreferenceInput = z.infer<typeof updatePreferenceSchema>;
 export type CyclePapersQuery = z.infer<typeof cyclePapersQuerySchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
