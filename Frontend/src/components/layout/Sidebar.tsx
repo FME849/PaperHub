@@ -41,12 +41,12 @@ export default function Sidebar() {
 
   return (
     <aside className="hidden md:flex w-64 flex-col border-r bg-card h-screen sticky top-0">
-      <div className="p-6 flex items-center gap-3">
+      <Link href="/" className="p-6 flex items-center gap-3 hover:opacity-80 transition-opacity">
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
           <BookOpen className="w-5 h-5" />
         </div>
         <span className="font-serif font-bold text-xl tracking-tight">Paper Hub</span>
-      </div>
+      </Link>
       
       <nav className="flex-1 px-4 space-y-1">
         <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-2 py-4">
