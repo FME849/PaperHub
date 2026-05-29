@@ -197,6 +197,32 @@ export const favoritesPapersQuerySchema = z.object({
   cursor: z.string().min(1).max(200).optional(),
 });
 
+// ---------------------------------------------------------------------------
+// Email notifications (004-paper-email-notifications)
+// ---------------------------------------------------------------------------
+
+export const updatePreferenceSchema = z
+  .object({
+    enabled: z.boolean({
+      required_error: "enabled is required.",
+      invalid_type_error: "enabled must be a boolean.",
+    }),
+  })
+  .strict();
+
+export const unsubscribeQuerySchema = z.object({
+  token: z.string().min(1).max(512),
+});
+
+export const cyclePapersParamSchema = z.object({
+  cycleId: z.string().min(1, "Cycle id is required.").max(64),
+});
+
+export const cyclePapersQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).optional().default(50),
+  cursor: z.string().min(1).max(200).optional(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
@@ -209,3 +235,5 @@ export type TopicPapersQuery = z.infer<typeof topicPapersQuerySchema>;
 export type SearchPapersQuery = z.infer<typeof searchPapersQuerySchema>;
 export type PaperRelatedQuery = z.infer<typeof paperRelatedQuerySchema>;
 export type FavoritesPapersQuery = z.infer<typeof favoritesPapersQuerySchema>;
+export type UpdatePreferenceInput = z.infer<typeof updatePreferenceSchema>;
+export type CyclePapersQuery = z.infer<typeof cyclePapersQuerySchema>;
