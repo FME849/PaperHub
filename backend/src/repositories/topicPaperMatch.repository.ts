@@ -13,8 +13,10 @@ export interface ListByTopicQuery {
   cursor?: string;
 }
 
+import type { Paper, TopicPaperMatch, PaperSummary } from "@prisma/client";
+
 export interface TopicPaperMatchWithPaper extends TopicPaperMatch {
-  paper: Paper;
+  paper: Paper & { summary?: PaperSummary | null };
 }
 
 export interface NewAttributionRow {
@@ -42,7 +44,7 @@ export const topicPaperMatchRepository = {
         : [{ fetchedAt: order }, { id: order }];
     return prisma.topicPaperMatch.findMany({
       where: { trackedTopicId: topicId },
-      include: { paper: true },
+      include: { paper: { include: { summary: true } } },
       orderBy,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),

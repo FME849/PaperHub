@@ -64,7 +64,7 @@ export const paperSummaryRepository = {
       SELECT p.id AS id
       FROM Paper p
       LEFT JOIN PaperSummary s ON s.paperId = p.id
-      WHERE s.id IS NULL OR s.status = 'PENDING_RETRY'
+      WHERE s.id IS NULL OR s.status = 'PENDING_RETRY' OR s.model = 'gemini-2.0-flash-mocked'
       ORDER BY p.firstFetchedAt DESC
       LIMIT ${limit}
     `;

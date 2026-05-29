@@ -141,7 +141,7 @@ async function runTopic(
 
       // Post-persistence summarisation hook (research.md Decision 4).
       // Bounded by AI_PER_CYCLE_SUMMARY_CAP; remainder is queued for next cycle.
-      if (env.GEMINI_API_KEY && stats.summaries.attempted < env.AI_PER_CYCLE_SUMMARY_CAP) {
+      if (stats.summaries.attempted < env.AI_PER_CYCLE_SUMMARY_CAP) {
         stats.summaries.attempted++;
         await paceAiCall();
         const outcome = await summariesService.summarizeIfMissing(paperId);

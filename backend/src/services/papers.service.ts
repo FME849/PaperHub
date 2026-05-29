@@ -23,6 +23,8 @@ export interface PublicPaperItem {
   sourceUrl: string;
   publishedAt: string;
   matchedAt: string;
+  summaryStatus?: string;
+  summaryBullets?: string[];
 }
 
 export interface ListPapersForTopicResult {
@@ -78,6 +80,8 @@ function toPublicPaperItem(row: TopicPaperMatchWithPaper): PublicPaperItem {
     sourceUrl: row.paper.sourceUrl,
     publishedAt: row.paper.publishedAt.toISOString(),
     matchedAt: row.fetchedAt.toISOString(),
+    summaryStatus: row.paper.summary?.status,
+    summaryBullets: row.paper.summary?.bullets ? toJsonStringArray(row.paper.summary.bullets) : undefined,
   };
 }
 

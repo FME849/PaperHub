@@ -123,6 +123,7 @@ const parser = new XMLParser({
 
 async function fetchOnce(url: string): Promise<Response> {
   return fetch(url, {
+    signal: AbortSignal.timeout(15000),
     headers: {
       "User-Agent": "paperhub-fetcher/0.1 (mailto:lehaoson@gmail.com)",
       Accept: "application/atom+xml",

@@ -22,7 +22,7 @@ export const summariesService = {
    */
   async summarizeIfMissing(paperId: string): Promise<SummarizeIfMissingOutcome> {
     const existing = await paperSummaryRepository.findByPaperId(paperId);
-    if (existing && existing.status === "SUCCEEDED") {
+    if (existing && existing.status === "SUCCEEDED" && existing.model !== "gemini-2.0-flash-mocked") {
       return { kind: "already_succeeded" };
     }
     if (existing && existing.status === "NOT_SUMMARISABLE") {
