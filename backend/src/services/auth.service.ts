@@ -4,6 +4,7 @@ import jwt, { type SignOptions } from "jsonwebtoken";
 
 import { env } from "../config/env.js";
 import { DuplicateEmailError, InvalidCredentialsError } from "../errors.js";
+import { passwordResetRequestRepository } from "../repositories/passwordResetRequest.repository.js";
 import { userRepository } from "../repositories/user.repository.js";
 import type { LoginInput, RegisterInput } from "../validation/schemas.js";
 
@@ -80,6 +81,18 @@ export const authService = {
       throw new InvalidCredentialsError();
     }
     return { user: toPublicUser(user), token: signToken(user.id) };
+  },
+
+  /**
+   * Single source of truth for mutating a user's password. Hashes the new
+   * password, persists it (which also stamps passwordChangedAt, invalidating
+   * pre-change JWTs), and invalidates any outstanding reset links for the user
+   * (FR-011). Used by the reset flow and by the authenticated change-password.
+   */
+  async setPassword(userId: number, newPlaintextPassword: string): Promise<void> {
+    const passwordHash = await bcrypt.hash(newPlaintextPassword, BCRYPT_COST);
+    await userRepository.updatePasswordHash(userId, passwordHash);
+    await passwordResetRequestRepository.invalidateActiveForUser(userId, "PASSWORD_CHANGED");
   },
 
   toPublicUser,
