@@ -21,6 +21,10 @@ model User {
   notificationPreference EmailNotificationPreference?
   digestSendRecords      DigestSendRecord[]
   emailDeliveryFailures  EmailDeliveryFailure[]
+
+  passwordChangedAt     DateTime?
+  passwordResetRequests PasswordResetRequest[]
+  passwordResetEvents   PasswordResetAuditEvent[]
 }
 
 model Favorite {
@@ -208,4 +212,58 @@ model EmailDeliveryFailure {
 
   @@index([recipientEmail, reportedAt(sort: Desc)])
   @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Password reset (005-password-reset-email)
+// ---------------------------------------------------------------------------
+
+enum PasswordResetInvalidationReason {
+  SUPERSEDED
+  PASSWORD_CHANGED
+  USED
+}
+
+model PasswordResetRequest {
+  id                 String                           @id @default(cuid())
+  userId             Int
+  tokenHash          String                           @unique @db.VarChar(64)
+  expiresAt          DateTime
+  consumedAt         DateTime?
+  invalidatedAt      DateTime?
+  invalidationReason PasswordResetInvalidationReason?
+  sendAttempts       Int                              @default(0)
+  lastSendOutcome    String?                          @db.VarChar(32)
+  createdAt          DateTime                         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+enum PasswordResetEventType {
+  REQUESTED
+  SUPPRESSED_NO_ACCOUNT
+  THROTTLED
+  LINK_VERIFIED
+  COMPLETED
+  SEND_FAILED
+  RETRY_EXHAUSTED
+}
+
+model PasswordResetAuditEvent {
+  id             String                 @id @default(cuid())
+  userId         Int?
+  eventType      PasswordResetEventType
+  emailAttempted String?                @db.VarChar(254)
+  ipHash         String?                @db.VarChar(64)
+  detail         String?                @db.VarChar(255)
+  createdAt      DateTime               @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([emailAttempted, createdAt(sort: Desc)])
+  @@index([ipHash, createdAt(sort: Desc)])
 }
