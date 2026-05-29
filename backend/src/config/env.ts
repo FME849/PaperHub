@@ -23,6 +23,15 @@ function optionalNumber(name: string, fallback: number): number {
   return parsed;
 }
 
+function optionalBoolean(name: string, fallback: boolean): boolean {
+  const raw = process.env[name];
+  if (raw === undefined || raw === "") return fallback;
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === "true" || normalized === "1") return true;
+  if (normalized === "false" || normalized === "0") return false;
+  throw new Error(`Env var ${name} must be a boolean (true/false), got: ${raw}`);
+}
+
 export const env = {
   DATABASE_URL: required("DATABASE_URL"),
   JWT_SECRET: required("JWT_SECRET"),
@@ -57,4 +66,27 @@ export const env = {
   SEARCH_MAX_LIMIT: optionalNumber("SEARCH_MAX_LIMIT", 200),
   RECOMMENDATIONS_DEFAULT_LIMIT: optionalNumber("RECOMMENDATIONS_DEFAULT_LIMIT", 20),
   RECOMMENDATIONS_MAX_LIMIT: optionalNumber("RECOMMENDATIONS_MAX_LIMIT", 50),
+
+  // Email notifications (004-paper-email-notifications)
+  NOTIFICATIONS_ENABLED: optionalBoolean("NOTIFICATIONS_ENABLED", true),
+  SMTP_HOST: optional("SMTP_HOST", "127.0.0.1"),
+  SMTP_PORT: optionalNumber("SMTP_PORT", 1025),
+  SMTP_SECURE: optionalBoolean("SMTP_SECURE", false),
+  SMTP_USER: optional("SMTP_USER", ""),
+  SMTP_PASS: optional("SMTP_PASS", ""),
+  EMAIL_FROM: optional("EMAIL_FROM", "no-reply@paperhub.local"),
+  EMAIL_FROM_NAME: optional("EMAIL_FROM_NAME", "PaperHub"),
+  FRONTEND_BASE_URL: optional("FRONTEND_BASE_URL", "http://localhost:3000"),
+  PUBLIC_API_BASE_URL: optional("PUBLIC_API_BASE_URL", "http://localhost:4000"),
+  UNSUBSCRIBE_TOKEN_SECRET: optional("UNSUBSCRIBE_TOKEN_SECRET", ""),
+  DIGEST_TOP_PICKS_COUNT: optionalNumber("DIGEST_TOP_PICKS_COUNT", 3),
+  HARD_BOUNCE_THRESHOLD: optionalNumber("HARD_BOUNCE_THRESHOLD", 3),
 } as const;
+
+// When notifications are enabled, the unsubscribe-link signing secret is
+// mandatory: a missing secret would make every unsubscribe token forgeable.
+if (env.NOTIFICATIONS_ENABLED && env.UNSUBSCRIBE_TOKEN_SECRET === "") {
+  throw new Error(
+    "UNSUBSCRIBE_TOKEN_SECRET is required when NOTIFICATIONS_ENABLED=true. Set a long random value.",
+  );
+}
