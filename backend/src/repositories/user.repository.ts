@@ -45,7 +45,7 @@ export const userRepository = {
   updatePasswordHash(id: number, passwordHash: string): Promise<User> {
     return prisma.user.update({
       where: { id },
-      data: { passwordHash },
+      data: { passwordHash, passwordChangedAt: new Date() },
     });
   },
 };
