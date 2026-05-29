@@ -49,7 +49,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     const message =
       typeof body?.error === "string" ? body.error : "Request failed";
     const err = new ApiError(res.status, message, body?.details);
-    if (res.status === 401 && token) {
+    if (res.status === 401) {
       tokenStore.clear();
       unauthorizedHandler?.();
     }

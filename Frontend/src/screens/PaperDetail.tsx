@@ -269,12 +269,26 @@ export default function PaperDetail({ id }: { id: string }) {
                   </h2>
                   <div className="prose prose-zinc max-w-none mb-8 bg-primary/5 p-6 rounded-2xl border border-primary/10">
                     <ul className="space-y-3 m-0 p-0 list-none">
-                      {paperBullets.map((bullet, idx) => (
-                        <li key={idx} className="flex items-start gap-3 text-foreground/95 text-lg leading-relaxed font-serif">
-                          <span className="text-primary mt-1.5 text-xl leading-none">•</span>
-                          <span>{bullet}</span>
-                        </li>
-                      ))}
+                      {paperBullets.map((bullet, idx) => {
+                        const colonIndex = bullet.indexOf(":");
+                        const hasPrefix = colonIndex !== -1 && colonIndex < 30; // only bold if it's a short prefix
+                        
+                        return (
+                          <li key={idx} className="flex items-start gap-3 text-foreground/95 text-lg leading-relaxed font-serif">
+                            <span className="text-primary mt-1.5 text-xl leading-none">•</span>
+                            <span>
+                              {hasPrefix ? (
+                                <>
+                                  <strong className="font-semibold text-foreground">{bullet.substring(0, colonIndex + 1)}</strong>
+                                  {bullet.substring(colonIndex + 1)}
+                                </>
+                              ) : (
+                                bullet
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 </>

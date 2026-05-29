@@ -371,8 +371,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       logout,
       refreshUser,
       requestPasswordReset: async (email: string) => {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        return true;
+        try {
+          const { requestPasswordReset } = await import("@/src/lib/auth-api");
+          await requestPasswordReset(email);
+          return true;
+        } catch (e) {
+          console.error(e);
+          return false;
+        }
       },
       fetchNewPapers: () => {
         const paper = buildMockPaper(topics);

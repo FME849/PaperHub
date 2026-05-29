@@ -72,9 +72,20 @@ export default function PaperCard({ paper }: PaperCardProps) {
         </CardHeader>
         <CardContent className="p-5 pt-3">
           <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-            {paper.summary}
+            {(() => {
+              const summaryStr = paper.summary || "";
+              const colonIndex = summaryStr.indexOf(":");
+              if (colonIndex !== -1 && colonIndex < 30) {
+                return (
+                  <>
+                    <strong className="font-semibold text-foreground">{summaryStr.substring(0, colonIndex + 1)}</strong>
+                    {summaryStr.substring(colonIndex + 1)}
+                  </>
+                );
+              }
+              return summaryStr;
+            })()}
           </p>
-          
           <div className="mt-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5" title="Readability Score">

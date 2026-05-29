@@ -120,7 +120,7 @@ export default function Dashboard() {
             publishDate: item.publishedAt,
             sourceUrl: (item as any).sourceUrl || item.url,
             abstract: item.abstract,
-            summary: item.abstract, // Fallback to abstract excerpt
+                summary: (item as any).summaryStatus === "SUCCEEDED" && (item as any).summaryBullets?.length ? (item as any).summaryBullets[0] : item.abstract,
             topics: [selectedTopic],
             isBookmarked: favoriteIds.has(item.id),
             readabilityScore: getDeterministicScore(item.id, 70, 95),
@@ -144,7 +144,7 @@ export default function Dashboard() {
                 publishDate: item.publishedAt,
                 sourceUrl: (item as any).sourceUrl || item.url,
                 abstract: item.abstract,
-                summary: item.abstract,
+                summary: (item as any).summaryStatus === "SUCCEEDED" && (item as any).summaryBullets?.length ? (item as any).summaryBullets[0] : item.abstract,
                 topics: [topic.name],
                 isBookmarked: favoriteIds.has(item.id),
                 readabilityScore: getDeterministicScore(item.id, 70, 95),

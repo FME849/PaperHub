@@ -101,7 +101,7 @@ export default function Login() {
                     Password
                   </label>
                   <Link
-                    href="/auth/forgot-password"
+                    href="/forgot-password"
                     className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-primary transition-colors"
                   >
                     Forgot?
